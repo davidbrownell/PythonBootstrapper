@@ -1,1 +1,1 @@
-echo Hello for ActivateEpilog.cmd
+echo Hello from ActivateEpilog.cmd
