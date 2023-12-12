@@ -16,7 +16,7 @@
 setlocal EnableDelayedExpansion
 
 echo.
-echo Version 0.6.0
+echo Version 0.7.1
 echo.
 
 @REM This script:
@@ -291,7 +291,7 @@ echo [1ACreating a python virtual environment...[32m[1mDONE[0m.
 @REM |
 @REM ----------------------------------------------------------------------
 if exist "BootstrapEpilog.cmd" goto :BootstrapEpilog_Execute
-if exist "BootstrapEpllog.py" goto :BootstrapEpilog_Execute
+if exist "BootstrapEpilog.py" goto :BootstrapEpilog_Execute
 goto :BootstrapEpilog_Skip
 
 :BootstrapEpilog_Execute
@@ -307,7 +307,7 @@ call BootstrapEpilog.cmd
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
-    echo [31m[1mERROR: [0mExecuting the BootstrapEpilog.cmd failed.
+    echo [31m[1mERROR: [0mBootstrapEpilog.cmd failed.
     goto :Exit
 )
 
@@ -319,7 +319,7 @@ python BootstrapEpilog.py
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
-    echo [31m[1mERROR: [0mExecuting BootstrapEpilog.py failed.
+    echo [31m[1mERROR: [0mBootstrapEpilog.py failed.
     goto :Exit
 )
 
@@ -522,8 +522,7 @@ if %_DELETE_ENVIRONMENT_ON_ERROR% EQU 1 (
     )
 )
 
-endlocal
-exit /B %_ERRORLEVEL%
+endlocal & exit /B %_ERRORLEVEL%
 
 @REM ----------------------------------------------------------------------
 @REM ----------------------------------------------------------------------
