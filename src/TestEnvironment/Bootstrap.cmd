@@ -13,9 +13,6 @@
 @REM |  http://www.boost.org/LICENSE_1_0.txt.
 @REM |
 @REM ----------------------------------------------------------------------
-@if "%1" NEQ "--debug" (
-    @echo off
-)
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -24,41 +21,41 @@
 @REM |
 @REM ----------------------------------------------------------------------
 
-setlocal EnableDelayedExpansion
+@setlocal EnableDelayedExpansion
 
 @REM ----------------------------------------------------------------------
-pushd %~dp0
+@pushd %~dp0
 
 @REM ----------------------------------------------------------------------
 @REM |
 @REM |  Download BootstrapImpl.cmd
 @REM |
 @REM ----------------------------------------------------------------------
-echo Downloading Bootstrap code...
+@echo Downloading Bootstrap code...
 
-call :_CreateTempFileName
+@call :_CreateTempFileName
 
-curl --header "Cache-Control: no-cache, no-store" --header "Pragma: no-cache" --location https://raw.githubusercontent.com/davidbrownell/PythonBootstrapper/main/src/BootstrapImpl.cmd --output BootstrapImpl.cmd --no-progress-meter --fail-with-body > "%_BOOTSTRAP_TEMP_FILENAME%" 2>&1
-set _ERRORLEVEL=%ERRORLEVEL%
+@curl --header "Cache-Control: no-cache, no-store" --header "Pragma: no-cache" --location https://raw.githubusercontent.com/davidbrownell/PythonBootstrapper/main/src/BootstrapImpl.cmd --output BootstrapImpl.cmd --no-progress-meter --fail-with-body > "%_BOOTSTRAP_TEMP_FILENAME%" 2>&1
+@set _ERRORLEVEL=%ERRORLEVEL%
 
-if %_ERRORLEVEL% NEQ 0 (
-    echo [1ADownloading Bootstrap code...[31m[1mFAILED[0m.
-    echo.
+@if %_ERRORLEVEL% NEQ 0 (
+    @echo [1ADownloading Bootstrap code...[31m[1mFAILED[0m.
+    @echo.
 
-    type "%_BOOTSTRAP_TEMP_FILENAME%"
-    goto :Exit
+    @type "%_BOOTSTRAP_TEMP_FILENAME%"
+    @goto :Exit
 )
 
-call :_DeleteTempFile
-echo [1ADownloading Bootstrap code...[32m[1mDONE[0m.
+@call :_DeleteTempFile
+@echo [1ADownloading Bootstrap code...[32m[1mDONE[0m.
 
 @REM ----------------------------------------------------------------------
 @REM |
 @REM |  Invoke BootstrapImpl.cmd
 @REM |
 @REM ----------------------------------------------------------------------
-call BootstrapImpl.cmd
-set _ERRORLEVEL=%ERRORLEVEL%
+@call BootstrapImpl.cmd
+@set _ERRORLEVEL=%ERRORLEVEL%
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -66,25 +63,25 @@ set _ERRORLEVEL=%ERRORLEVEL%
 @REM |
 @REM ----------------------------------------------------------------------
 :Exit
-if exist BootstrapImpl.cmd del BootstrapImpl.cmd
-call :_DeleteTempFile
+@if exist BootstrapImpl.cmd del BootstrapImpl.cmd
+@call :_DeleteTempFile
 
-popd
+@popd
 
-endlocal & exit /B %_ERRORLEVEL%
+@endlocal & @exit /B %_ERRORLEVEL%
 
 @REM ----------------------------------------------------------------------
 @REM ----------------------------------------------------------------------
 @REM ----------------------------------------------------------------------
 :_CreateTempFileName
-set _BOOTSTRAP_TEMP_FILENAME=%CD%Bootstrap-!RANDOM!-!Time:~6,5!
-goto :EOF
+@set _BOOTSTRAP_TEMP_FILENAME=%CD%Bootstrap-!RANDOM!-!Time:~6,5!
+@goto :EOF
 
 @REM ----------------------------------------------------------------------
 :_DeleteTempFile
-if "%_BOOTSTRAP_TEMP_FILENAME%" NEQ "" (
-    if exist "%_BOOTSTRAP_TEMP_FILENAME%" (
-        del "%_BOOTSTRAP_TEMP_FILENAME%"
+@if "%_BOOTSTRAP_TEMP_FILENAME%" NEQ "" (
+    @if exist "%_BOOTSTRAP_TEMP_FILENAME%" (
+        @del "%_BOOTSTRAP_TEMP_FILENAME%"
     )
 )
-goto :EOF
+@goto :EOF

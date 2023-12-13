@@ -13,11 +13,11 @@
 @REM |  http://www.boost.org/LICENSE_1_0.txt.
 @REM |
 @REM ----------------------------------------------------------------------
-setlocal EnableDelayedExpansion
+@setlocal EnableDelayedExpansion
 
-echo.
-echo Version 0.7.1
-echo.
+@echo.
+@echo Version 0.3.0
+@echo.
 
 @REM This script:
 @REM     1) Ensure that PYTHON_VERSION is set
@@ -34,7 +34,49 @@ echo.
 @REM     7) Invoke custom functionality (if necessary)
 @REM     8) Create Activate.cmd and Deactivate.cmd
 
-set _DELETE_ENVIRONMENT_ON_ERROR=0
+@set _DELETE_ENVIRONMENT_ON_ERROR=0
+@set _IS_FORCE=0
+@set _IS_DEBUG=0
+
+@REM ----------------------------------------------------------------------
+@REM |
+@REM |  Parse and Process Arguments
+@REM |
+@REM ----------------------------------------------------------------------
+:ParseArgs
+@if '%1' NEQ '' (
+    @set _COMMAND_LINE_ARGS=%_COMMAND_LINE_ARGS% %1
+
+    @if '%1' EQU '--debug' @set _IS_DEBUG=1
+    @if '%1' EQU '--force' @set _IS_FORCE=1
+
+    @shift /1
+    @goto :ParseArgs
+)
+
+@REM ----------------------------------------------------------------------
+@if %_IS_DEBUG% NEQ 1 (
+    @echo off
+)
+
+if %_IS_FORCE% EQU 0 goto :Force_End
+if not exist "%USERPROFILE%\micromamba" goto :Force_End
+
+echo Removing micromamba...
+
+rmdir /S /Q "%USERPROFILE%\micromamba"
+set _ERRORLEVEL=%ERRORLEVEL%
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [1ARemoving micromamba...[31m[1mFAILED[0m.
+    echo.
+
+    goto :Exit
+)
+
+echo [1ARemoving micromamba...[32m[1mDONE[0m.
+
+:Force_End
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -307,6 +349,7 @@ call BootstrapEpilog.cmd
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
+    echo.
     echo [31m[1mERROR: [0mBootstrapEpilog.cmd failed.
     goto :Exit
 )
@@ -315,19 +358,34 @@ if %_ERRORLEVEL% NEQ 0 (
 
 if not exist "BootstrapEpilog.py" goto :Epiolg_ExecutePy_End
 
-python BootstrapEpilog.py
+python BootstrapEpilog.py BootstrapEpilog_py.cmd %_COMMAND_LINE_ARGS%
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
     echo [31m[1mERROR: [0mBootstrapEpilog.py failed.
+    if exist BootstrapEpilog_py.cmd del BootstrapEpilog_py.cmd
     goto :Exit
 )
 
+REM Execute the instructions
+if not exist BootstrapEpilog_py.cmd goto :Epilog_ExecutePyCmd_End
+
+call BootstrapEpilog_py.cmd
+set _ERRORLEVEL=%ERRORLEVEL%
+
+del BootstrapEpilog_py.cmd
+
+if %_ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [31m[1mERROR: [0mExecuting the BootstrapEpilog.py output failed.
+    goto :Exit
+)
+
+:Epilog_ExecutePyCmd_End
 :Epiolg_ExecutePy_End
+:BootstrapEpilog_Skip
 
 echo.
-
-:BootstrapEpilog_Skip
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -362,6 +420,7 @@ echo Creating Activate.cmd...
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
+    echo     echo.
     echo     echo [31m[1mERROR: [0mActivateEpilog.cmd failed.
     echo     goto :Exit
     echo ^)
@@ -371,7 +430,7 @@ echo Creating Activate.cmd...
     echo if not exist "ActivateEpilog.py" goto :ActivateEpilog_ExecutePy_End
     echo.
     echo REM Create the instructions
-    echo python ActivateEpilog.py ActivateEpilog_py.cmd
+    echo python ActivateEpilog.py ActivateEpilog_py.cmd %%*
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
@@ -389,6 +448,7 @@ echo Creating Activate.cmd...
     echo del ActivateEpilog_py.cmd
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
+    echo     echo.
     echo     echo [31m[1mERROR: [0mExecuting the ActivateEpilog.py output failed.
     echo     goto :Exit
     echo ^)
@@ -428,6 +488,7 @@ echo Creating Deactivate.cmd...
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
+    echo     echo.
     echo     echo [31m[1mERROR: [0mDeactivateEpilog.cmd failed.
     echo     goto :Exit
     echo ^)
@@ -437,7 +498,7 @@ echo Creating Deactivate.cmd...
     echo if not exist "DeactivateEpilog.py" goto :DeactivateEpilog_ExecutePy_End
     echo.
     echo REM Create the instructions
-    echo python DeactivateEpilog.py DeactivateEpilog_py.cmd
+    echo python DeactivateEpilog.py DeactivateEpilog_py.cmd %%*
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
@@ -455,6 +516,7 @@ echo Creating Deactivate.cmd...
     echo del DeactivateEpilog_py.cmd
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
+    echo     echo.
     echo     echo [31m[1mERROR: [0mExecuting the DeactivateEpilog.py output failed.
     echo     goto :Exit
     echo ^)

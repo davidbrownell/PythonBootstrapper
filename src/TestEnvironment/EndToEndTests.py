@@ -22,6 +22,7 @@ import subprocess
 import textwrap
 
 from pathlib import Path
+from typing import Optional
 
 import pytest
 
@@ -55,6 +56,10 @@ assert micromamba_path.is_dir(), textwrap.dedent(
 
 
 # ----------------------------------------------------------------------
+INVALID_COMMAND                             = "this is an invalid command"
+
+
+# ----------------------------------------------------------------------
 class TestBootstrapEpilog(object):
     # ----------------------------------------------------------------------
     def Execute(
@@ -63,8 +68,13 @@ class TestBootstrapEpilog(object):
         root: Path,
         expected_output: str,
         expected_result: int=0,
+        arguments: Optional[list[str]]=None,
     ) -> None:
-        result, output = _Execute(files_to_copy, root, "Bootstrap{}".format(_extension))
+        result, output = _Execute(
+            files_to_copy,
+            root,
+            "Bootstrap{} {}".format(_extension, " ".join('"{}"'.format(arg) for arg in (arguments or []))),
+        )
 
         assert result == expected_result, (result, output)
         assert output == expected_output, output
@@ -82,7 +92,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -90,6 +100,7 @@ class TestBootstrapEpilog(object):
                 Initializing the micromamba environment...DONE (already exists).
                 Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
+
                 Creating Activate.cmd...DONE.
                 Creating Deactivate.cmd...DONE.
 
@@ -131,7 +142,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -183,7 +194,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -193,6 +204,9 @@ class TestBootstrapEpilog(object):
                 Creating a python virtual environment...DONE.
 
                 Hello from BootstrapEpilog.py
+                Arguments
+                  - BootstrapEpilog_py.cmd
+                Hello from BootstrapEpilog_py{extension}
 
                 Creating Activate.cmd...DONE.
                 Creating Deactivate.cmd...DONE.
@@ -236,7 +250,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -247,6 +261,9 @@ class TestBootstrapEpilog(object):
 
                 Hello from BootstrapEpilog{extension}
                 Hello from BootstrapEpilog.py
+                Arguments
+                  - BootstrapEpilog_py.cmd
+                Hello from BootstrapEpilog_py{extension}
 
                 Creating Activate.cmd...DONE.
                 Creating Deactivate.cmd...DONE.
@@ -280,21 +297,7 @@ class TestBootstrapEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"BootstrapEpilog{_extension}").open("w") as f:
-            f.write("this is an invalid command")
-
-        if _is_windows:
-            error = textwrap.dedent(
-                """\
-                'this' is not recognized as an internal or external command,
-                operable program or batch file.
-                ERROR: BootstrapEpilog.cmd failed.
-                """,
-            ).rstrip()
-
-            expected_result = 1
-
-        else:
-            assert False
+            f.write(INVALID_COMMAND)
 
         self.Execute(
             [
@@ -305,7 +308,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -315,11 +318,13 @@ class TestBootstrapEpilog(object):
                 Creating a python virtual environment...DONE.
 
                 {error}
+                ERROR: BootstrapEpilog{extension} failed.
                 """,
             ).format(
-                error=error,
+                error=_error_output,
+                extension=_extension,
             ),
-            expected_result=expected_result,
+            expected_result=_error_result,
         )
 
     # ----------------------------------------------------------------------
@@ -345,7 +350,7 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.7.1
+                Version 0.3.0-prerelease.1
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
@@ -360,6 +365,113 @@ class TestBootstrapEpilog(object):
             expected_result=2,
         )
 
+    # ----------------------------------------------------------------------
+    def test_PythonResultError(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        with (root / f"BootstrapEpilog.py").open("w") as f:
+            f.write(
+                textwrap.dedent(
+                    """\
+                    import sys
+                    from pathlib import Path
+
+                    with Path(sys.argv[1]).open("w") as f:
+                        f.write("{}")
+                    """,
+                ).format(INVALID_COMMAND),
+            )
+
+        self.Execute(
+            [
+                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+            ],
+            root,
+            textwrap.dedent(
+                """\
+                Downloading Bootstrap code...DONE.
+
+                Version 0.3.0-prerelease.1
+
+                Downloading default python version information...DONE.
+                Validating python version...DONE.
+                Downloading micromamba...DONE (already exists).
+                Initializing the micromamba environment...DONE (already exists).
+                Activating the micromamba environment...DONE.
+                Creating a python virtual environment...DONE.
+
+                {}
+                ERROR: Executing the BootstrapEpilog.py output failed.
+                """,
+            ).format(_error_output),
+            expected_result=_error_result,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_Arguments(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Execute(
+            [
+                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (templates_path / "BootstrapEpilog.py", root / "BootstrapEpilog.py"),
+            ],
+            root,
+            textwrap.dedent(
+                """\
+                Downloading Bootstrap code...DONE.
+
+                Version 0.3.0-prerelease.1
+
+                Downloading default python version information...DONE.
+                Validating python version...DONE.
+                Downloading micromamba...DONE (already exists).
+                Initializing the micromamba environment...DONE (already exists).
+                Activating the micromamba environment...DONE.
+                Creating a python virtual environment...DONE.
+
+                Hello from BootstrapEpilog.py
+                Arguments
+                  - BootstrapEpilog_py.cmd
+                  - 1
+                  - two three
+                  - 4
+                  - --five
+                Hello from BootstrapEpilog_py{extension}
+
+                Creating Activate.cmd...DONE.
+                Creating Deactivate.cmd...DONE.
+
+
+
+                -----------------------------------------------------------------------
+                -----------------------------------------------------------------------
+
+                Your repository has been successfully bootstrapped. Run the following
+                commands to activate and deactivate the local development environment:
+
+                  Activate{extension}:    {activate}
+                  Deactivate{extension}:  {deactivate}
+
+                -----------------------------------------------------------------------
+                -----------------------------------------------------------------------
+
+
+
+                """,
+            ).format(
+                extension=_extension,
+                activate=(root / "Activate{}".format(_extension)).resolve(),
+                deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
+            ),
+            arguments=[
+                "1",
+                "two three",
+                "4",
+                "--five",
+            ],
+        )
+
 
 # ----------------------------------------------------------------------
 class TestActivateEpilog(object):
@@ -370,11 +482,16 @@ class TestActivateEpilog(object):
         root: Path,
         expected_output: str,
         expected_result: int=0,
+        arguments: Optional[list[str]]=None,
     ) -> None:
         result, output = _Execute(files_to_copy, root, "Bootstrap{}".format(_extension))
         assert result == 0, output
 
-        result, output = _Execute([], root, "Activate{}".format(_extension))
+        result, output = _Execute(
+            [],
+            root,
+            "Activate{} {}".format(_extension, " ".join('"{}"'.format(arg) for arg in (arguments or []))),
+        )
         assert result == expected_result, (result, output)
         assert output == expected_output, output
 
@@ -432,6 +549,8 @@ class TestActivateEpilog(object):
             textwrap.dedent(
                 """\
                 Hello from ActivateEpilog.py
+                Arguments
+                  - ActivateEpilog_py.cmd
                 Hello from ActivateEpilog_py{extension}
 
                 {root} has been activated.
@@ -458,6 +577,8 @@ class TestActivateEpilog(object):
                 """\
                 Hello from ActivateEpilog{extension}
                 Hello from ActivateEpilog.py
+                Arguments
+                  - ActivateEpilog_py.cmd
                 Hello from ActivateEpilog_py{extension}
 
                 {root} has been activated.
@@ -474,20 +595,7 @@ class TestActivateEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"ActivateEpilog{_extension}").open("w") as f:
-            f.write("this is an invalid command")
-
-        if _is_windows:
-            error = textwrap.dedent(
-                """\
-                'this' is not recognized as an internal or external command,
-                operable program or batch file.
-                """,
-            ).rstrip()
-
-            expected_result = 1
-
-        else:
-            assert False
+            f.write(INVALID_COMMAND)
 
         self.Execute(
             [
@@ -500,10 +608,10 @@ class TestActivateEpilog(object):
                 ERROR: ActivateEpilog{extension} failed.
                 """,
             ).format(
-                error=error,
+                error=_error_output,
                 extension=_extension,
             ),
-            expected_result=expected_result,
+            expected_result=_error_result,
         )
 
     # ----------------------------------------------------------------------
@@ -545,22 +653,10 @@ class TestActivateEpilog(object):
                     from pathlib import Path
 
                     with Path(sys.argv[1]).open("w") as f:
-                        f.write("this is an invalid command")
+                        f.write("{}")
                     """,
-                ),
+                ).format(INVALID_COMMAND),
             )
-
-        if _is_windows:
-            error = textwrap.dedent(
-                """\
-                'this' is not recognized as an internal or external command,
-                operable program or batch file.
-                """,
-            ).rstrip()
-
-            expected_result = 1
-        else:
-            assert False
 
         self.Execute(
             [
@@ -572,8 +668,44 @@ class TestActivateEpilog(object):
                 {}
                 ERROR: Executing the ActivateEpilog.py output failed.
                 """,
-            ).format(error),
-            expected_result=expected_result,
+            ).format(_error_output),
+            expected_result=_error_result,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_Arguments(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Execute(
+            [
+                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (templates_path / "ActivateEpilog.py", root / "ActivateEpilog.py"),
+            ],
+            root,
+            textwrap.dedent(
+                """\
+                Hello from ActivateEpilog.py
+                Arguments
+                  - ActivateEpilog_py.cmd
+                  - 1
+                  - two three
+                  - 4
+                  - --five
+                Hello from ActivateEpilog_py{extension}
+
+                {root} has been activated.
+
+                """,
+            ).format(
+                extension=_extension,
+                root=root,
+            ),
+            arguments=[
+                "1",
+                "two three",
+                "4",
+                "--five",
+            ],
         )
 
 
@@ -586,11 +718,19 @@ class TestDeactivateEpilog(object):
         root: Path,
         expected_output: str,
         expected_result: int=0,
+        arguments: Optional[list[str]]=None,
     ) -> None:
         result, output = _Execute(files_to_copy, root, "Bootstrap{}".format(_extension))
         assert result == 0, output
 
-        result, output = _Execute([], root, "Activate{extension} & Deactivate{extension}".format(extension=_extension))
+        result, output = _Execute(
+            [],
+            root,
+            "Activate{extension} & Deactivate{extension} {args}".format(
+                extension=_extension,
+                args=" ".join('"{}"'.format(arg) for arg in (arguments or [])),
+            ),
+        )
 
         assert result == expected_result, (result, output)
         assert output == expected_output, output
@@ -658,6 +798,8 @@ class TestDeactivateEpilog(object):
                 {root} has been activated.
 
                 Hello from DeactivateEpilog.py
+                Arguments
+                  - DeactivateEpilog_py.cmd
                 Hello from DeactivateEpilog_py{extension}
 
                 {root} has been deactivated.
@@ -687,6 +829,8 @@ class TestDeactivateEpilog(object):
 
                 Hello from DeactivateEpilog{extension}
                 Hello from DeactivateEpilog.py
+                Arguments
+                  - DeactivateEpilog_py.cmd
                 Hello from DeactivateEpilog_py{extension}
 
                 {root} has been deactivated.
@@ -703,20 +847,7 @@ class TestDeactivateEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"DeactivateEpilog{_extension}").open("w") as f:
-            f.write("this is an invalid command")
-
-        if _is_windows:
-            error = textwrap.dedent(
-                """\
-                'this' is not recognized as an internal or external command,
-                operable program or batch file.
-                """,
-            ).rstrip()
-
-            expected_result = 1
-
-        else:
-            assert False
+            f.write(INVALID_COMMAND)
 
         self.Execute(
             [
@@ -733,10 +864,10 @@ class TestDeactivateEpilog(object):
                 """,
             ).format(
                 root=root,
-                error=error,
+                error=_error_output,
                 extension=_extension,
             ),
-            expected_result=expected_result,
+            expected_result=_error_result,
         )
 
     # ----------------------------------------------------------------------
@@ -783,22 +914,10 @@ class TestDeactivateEpilog(object):
                     from pathlib import Path
 
                     with Path(sys.argv[1]).open("w") as f:
-                        f.write("this is an invalid command")
+                        f.write("{}")
                     """,
-                ),
+                ).format(INVALID_COMMAND),
             )
-
-        if _is_windows:
-            error = textwrap.dedent(
-                """\
-                'this' is not recognized as an internal or external command,
-                operable program or batch file.
-                """,
-            ).rstrip()
-
-            expected_result = 1
-        else:
-            assert False
 
         self.Execute(
             [
@@ -815,10 +934,50 @@ class TestDeactivateEpilog(object):
                 """,
             ).format(
                 root=root,
-                error=error,
+                error=_error_output,
             ),
-            expected_result=expected_result,
+            expected_result=_error_result,
         )
+
+    # ----------------------------------------------------------------------
+    def test_Arguments(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Execute(
+            [
+                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (templates_path / "DeactivateEpilog.py", root / "DeactivateEpilog.py"),
+            ],
+            root,
+            textwrap.dedent(
+                """\
+
+                {root} has been activated.
+
+                Hello from DeactivateEpilog.py
+                Arguments
+                  - DeactivateEpilog_py.cmd
+                  - 1
+                  - two three
+                  - 4
+                  - --five
+                Hello from DeactivateEpilog_py{extension}
+
+                {root} has been deactivated.
+
+                """,
+            ).format(
+                extension=_extension,
+                root=root,
+            ),
+            arguments=[
+                "1",
+                "two three",
+                "4",
+                "--five",
+            ],
+        )
+
 
 
 # ----------------------------------------------------------------------
@@ -867,3 +1026,7 @@ def templates_path() -> Path:
 
     assert result.is_dir(), result
     return result
+
+
+# ----------------------------------------------------------------------
+_error_result, _error_output = _Execute([], Path(__file__).parent, INVALID_COMMAND)
