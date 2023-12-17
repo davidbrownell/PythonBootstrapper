@@ -17,13 +17,10 @@
 @REM ----------------------------------------------------------------------
 @REM |
 @REM |  This script downloads and invokes BoostrapImpl.cmd from the PythonBootstrapper
-@REM |  repository.
+@REM |  repository (https://github.com/davidbrownell/PythonBootstrapper).
 @REM |
 @REM ----------------------------------------------------------------------
-
 @setlocal EnableDelayedExpansion
-
-@REM ----------------------------------------------------------------------
 @pushd %~dp0
 
 @REM ----------------------------------------------------------------------
@@ -54,7 +51,7 @@
 @REM |  Invoke BootstrapImpl.cmd
 @REM |
 @REM ----------------------------------------------------------------------
-@call BootstrapImpl.cmd
+@call BootstrapImpl.cmd %*
 @set _ERRORLEVEL=%ERRORLEVEL%
 
 @REM ----------------------------------------------------------------------
@@ -74,7 +71,7 @@
 @REM ----------------------------------------------------------------------
 @REM ----------------------------------------------------------------------
 :_CreateTempFileName
-@set _BOOTSTRAP_TEMP_FILENAME=%CD%Bootstrap-!RANDOM!-!Time:~6,5!
+@set _BOOTSTRAP_TEMP_FILENAME=%CD%\Bootstrap-!RANDOM!-!Time:~6,5!
 @goto :EOF
 
 @REM ----------------------------------------------------------------------
