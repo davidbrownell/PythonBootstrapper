@@ -2,5 +2,7 @@
 **/__pycache__/**
 **/Generated/**
 
-src/TestEnvironment/Activate.cmd
-src/TestEnvironment/Deactivate.cmd
+src/EndToEndTests/Activate.cmd
+src/EndToEndTests/Activate.sh
+src/EndToEndTests/Deactivate.cmd
+src/EndToEndTests/Deactivate.sh

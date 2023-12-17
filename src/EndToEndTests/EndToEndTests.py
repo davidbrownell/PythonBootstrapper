@@ -22,41 +22,48 @@ import subprocess
 import textwrap
 
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import pytest
+
+# ----------------------------------------------------------------------
+INVALID_COMMAND                             = "this is an invalid command"
 
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
-    _is_windows = True
     _extension = ".cmd"
-
-    user_profile = os.environ["USERPROFILE"]
-    assert user_profile is not None
-
-    micromamba_path = Path(user_profile) / "micromamba"
+    _home_dir = os.environ["USERPROFILE"]
+    _execute_prefix = ""
+    _version = "0.5.0"
+    _init_shell_output = ""
+    _source = ""
+    _subprocess_executable = None
 
 else:
-    _is_windows = False
     _extension = ".sh"
+    _home_dir = os.environ["HOME"]
+    _execute_prefix = "./"
+    _version = "0.5.0"
+    _init_shell_output = "Initializing the micromamba shell...DONE.\n"
+    _source = ". "
+    _subprocess_executable = "/bin/bash"
 
+
+assert _home_dir is not None
+micromamba_path = Path(_home_dir) / "micromamba"
 
 # Ensure that Bootstrap has been run at least once. This is required because the output produced by
 # micromamba during the first run includes file sizes, download times, and hash values. All of these
 # values will be different each time the script is run and when different versions are introduced.
 assert micromamba_path.is_dir(), textwrap.dedent(
     """\
-    These tests must be run AFTER Bootstrap.cmd has been run successfully at least once.
+    These tests must be run AFTER Bootstrap{} has been run successfully at least once.
 
     To do this, navigate to `../../Templates` and run the Bootstrap script that corresponds to
     your operating system.
     """,
-)
-
-
-# ----------------------------------------------------------------------
-INVALID_COMMAND                             = "this is an invalid command"
+).format(_extension)
 
 
 # ----------------------------------------------------------------------
@@ -66,18 +73,28 @@ class TestBootstrapEpilog(object):
         self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
-        expected_output: str,
+        expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
     ) -> None:
         result, output = _Execute(
             files_to_copy,
             root,
-            "Bootstrap{} {}".format(_extension, " ".join('"{}"'.format(arg) for arg in (arguments or []))),
+            "{}Bootstrap{} {}".format(
+                _execute_prefix,
+                _extension,
+                " ".join('"{}"'.format(arg) for arg in (arguments or [])),
+            ),
         )
 
         assert result == expected_result, (result, output)
-        assert output == expected_output, output
+
+        if callable(expected_output):
+            assert expected_output(output), output
+        elif isinstance(expected_output, str):
+            assert output == expected_output, output
+        else:
+            assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path):
@@ -92,17 +109,20 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
-                Creating Activate.cmd...DONE.
-                Creating Deactivate.cmd...DONE.
+                Creating Activate{extension}...DONE.
+                Creating Deactivate{extension}...DONE.
 
 
 
@@ -122,6 +142,8 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
@@ -142,19 +164,22 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
                 Hello from BootstrapEpilog{extension}
 
-                Creating Activate.cmd...DONE.
-                Creating Deactivate.cmd...DONE.
+                Creating Activate{extension}...DONE.
+                Creating Deactivate{extension}...DONE.
 
 
 
@@ -174,6 +199,8 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
@@ -194,22 +221,25 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
                 Hello from BootstrapEpilog.py
                 Arguments
-                  - BootstrapEpilog_py.cmd
-                Hello from BootstrapEpilog_py{extension}
+                  - BootstrapEpilog_py{extension}
+                Hello from BootstrapEpilog.py output
 
-                Creating Activate.cmd...DONE.
-                Creating Deactivate.cmd...DONE.
+                Creating Activate{extension}...DONE.
+                Creating Deactivate{extension}...DONE.
 
 
 
@@ -229,6 +259,8 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
@@ -250,23 +282,26 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
                 Hello from BootstrapEpilog{extension}
                 Hello from BootstrapEpilog.py
                 Arguments
-                  - BootstrapEpilog_py.cmd
-                Hello from BootstrapEpilog_py{extension}
+                  - BootstrapEpilog_py{extension}
+                Hello from BootstrapEpilog.py output
 
-                Creating Activate.cmd...DONE.
-                Creating Deactivate.cmd...DONE.
+                Creating Activate{extension}...DONE.
+                Creating Deactivate{extension}...DONE.
 
 
 
@@ -286,6 +321,8 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
@@ -296,34 +333,57 @@ class TestBootstrapEpilog(object):
     def test_ScriptError(self, tmp_path_factory, templates_path):
         root = tmp_path_factory.mktemp("root")
 
-        with (root / f"BootstrapEpilog{_extension}").open("w") as f:
+        script_filename = root / f"BootstrapEpilog{_extension}"
+        with script_filename.open("w") as f:
             f.write(INVALID_COMMAND)
+
+        script_filename.chmod(0o755)
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return (
+                output.startswith(
+                    textwrap.dedent(
+                        """\
+                        Downloading Bootstrap code...DONE.
+
+                        Script Version {version}
+
+                        Downloading default python version information...DONE.
+                        Validating python version...DONE.
+
+                        Python Version 3.11
+
+                        Downloading micromamba...DONE (already exists).
+                        Initializing the micromamba environment...DONE (already exists).
+                        {init_shell_output}Activating the micromamba environment...DONE.
+                        Creating a python virtual environment...DONE.
+
+                        """,
+                    ).format(
+                        version=_version,
+                        init_shell_output=_init_shell_output,
+                    ),
+                )
+                and output.endswith(
+                    textwrap.dedent(
+                        """\
+                        ERROR: BootstrapEpilog{extension} failed.
+                        """,
+                    ).format(
+                        extension=_extension,
+                    ),
+                )
+            )
+
+        # ----------------------------------------------------------------------
 
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-                Downloading Bootstrap code...DONE.
-
-                Version 0.3.0-prerelease.1
-
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
-                Downloading micromamba...DONE (already exists).
-                Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
-                Creating a python virtual environment...DONE.
-
-                {error}
-                ERROR: BootstrapEpilog{extension} failed.
-                """,
-            ).format(
-                error=_error_output,
-                extension=_extension,
-            ),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -350,17 +410,23 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
                 ERROR: BootstrapEpilog.py failed.
                 """,
+            ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
             ),
             expected_result=2,
         )
@@ -374,12 +440,48 @@ class TestBootstrapEpilog(object):
                 textwrap.dedent(
                     """\
                     import sys
+
                     from pathlib import Path
 
                     with Path(sys.argv[1]).open("w") as f:
                         f.write("{}")
                     """,
-                ).format(INVALID_COMMAND),
+                ).format(INVALID_COMMAND.replace("\n", "\\n")),
+            )
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return (
+                output.startswith(
+                    textwrap.dedent(
+                        """\
+                        Downloading Bootstrap code...DONE.
+
+                        Script Version {version}
+
+                        Downloading default python version information...DONE.
+                        Validating python version...DONE.
+
+                        Python Version 3.11
+
+                        Downloading micromamba...DONE (already exists).
+                        Initializing the micromamba environment...DONE (already exists).
+                        {init_shell_output}Activating the micromamba environment...DONE.
+                        Creating a python virtual environment...DONE.
+
+                        """,
+                    ).format(
+                        version=_version,
+                        init_shell_output=_init_shell_output,
+                    ),
+                )
+                and output.endswith(
+                    textwrap.dedent(
+                        """\
+                        ERROR: Executing the BootstrapEpilog.py output failed.
+                        """,
+                    ),
+                )
             )
 
         self.Execute(
@@ -387,23 +489,7 @@ class TestBootstrapEpilog(object):
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-                Downloading Bootstrap code...DONE.
-
-                Version 0.3.0-prerelease.1
-
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
-                Downloading micromamba...DONE (already exists).
-                Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
-                Creating a python virtual environment...DONE.
-
-                {}
-                ERROR: Executing the BootstrapEpilog.py output failed.
-                """,
-            ).format(_error_output),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -421,26 +507,29 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Version 0.3.0-prerelease.1
+                Script Version {version}
 
                 Downloading default python version information...DONE.
                 Validating python version...DONE.
+
+                Python Version 3.11
+
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
-                Activating the micromamba environment...DONE.
+                {init_shell_output}Activating the micromamba environment...DONE.
                 Creating a python virtual environment...DONE.
 
                 Hello from BootstrapEpilog.py
                 Arguments
-                  - BootstrapEpilog_py.cmd
+                  - BootstrapEpilog_py{extension}
                   - 1
                   - two three
                   - 4
                   - --five
-                Hello from BootstrapEpilog_py{extension}
+                Hello from BootstrapEpilog.py output
 
-                Creating Activate.cmd...DONE.
-                Creating Deactivate.cmd...DONE.
+                Creating Activate{extension}...DONE.
+                Creating Deactivate{extension}...DONE.
 
 
 
@@ -460,6 +549,8 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
+                version=_version,
+                init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
@@ -480,20 +571,36 @@ class TestActivateEpilog(object):
         self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
-        expected_output: str,
+        expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
     ) -> None:
-        result, output = _Execute(files_to_copy, root, "Bootstrap{}".format(_extension))
+        result, output = _Execute(
+            files_to_copy,
+            root,
+            "{}Bootstrap{}".format(_execute_prefix, _extension),
+        )
         assert result == 0, output
 
         result, output = _Execute(
             [],
             root,
-            "Activate{} {}".format(_extension, " ".join('"{}"'.format(arg) for arg in (arguments or []))),
+            "{}{}Activate{} {}".format(
+                _source,
+                _execute_prefix,
+                _extension,
+                " ".join('"{}"'.format(arg) for arg in (arguments or [])),
+            ),
         )
+
         assert result == expected_result, (result, output)
-        assert output == expected_output, output
+
+        if callable(expected_output):
+            assert expected_output(output), output
+        elif isinstance(expected_output, str):
+            assert output == expected_output, output
+        else:
+            assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path):
@@ -550,8 +657,8 @@ class TestActivateEpilog(object):
                 """\
                 Hello from ActivateEpilog.py
                 Arguments
-                  - ActivateEpilog_py.cmd
-                Hello from ActivateEpilog_py{extension}
+                  - ActivateEpilog_py{extension}
+                Hello from ActivateEpilog.py output!
 
                 {root} has been activated.
 
@@ -578,8 +685,8 @@ class TestActivateEpilog(object):
                 Hello from ActivateEpilog{extension}
                 Hello from ActivateEpilog.py
                 Arguments
-                  - ActivateEpilog_py.cmd
-                Hello from ActivateEpilog_py{extension}
+                  - ActivateEpilog_py{extension}
+                Hello from ActivateEpilog.py output!
 
                 {root} has been activated.
 
@@ -594,23 +701,32 @@ class TestActivateEpilog(object):
     def test_ScriptError(self, tmp_path_factory, templates_path):
         root = tmp_path_factory.mktemp("root")
 
-        with (root / f"ActivateEpilog{_extension}").open("w") as f:
+        script_filename = root / f"ActivateEpilog{_extension}"
+        with script_filename.open("w") as f:
             f.write(INVALID_COMMAND)
+
+        script_filename.chmod(0o755)
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return output.endswith(
+                textwrap.dedent(
+                    """\
+                    ERROR: ActivateEpilog{extension} failed.
+                    """,
+                ).format(
+                    extension=_extension,
+                ),
+            )
+
+        # ----------------------------------------------------------------------
 
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-                {error}
-                ERROR: ActivateEpilog{extension} failed.
-                """,
-            ).format(
-                error=_error_output,
-                extension=_extension,
-            ),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -655,20 +771,27 @@ class TestActivateEpilog(object):
                     with Path(sys.argv[1]).open("w") as f:
                         f.write("{}")
                     """,
-                ).format(INVALID_COMMAND),
+                ).format(INVALID_COMMAND.replace("\n", "\\n")),
             )
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return output.endswith(
+                textwrap.dedent(
+                    """\
+                    ERROR: Executing the ActivateEpilog.py output failed.
+                    """,
+                ),
+            )
+
+        # ----------------------------------------------------------------------
 
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-                {}
-                ERROR: Executing the ActivateEpilog.py output failed.
-                """,
-            ).format(_error_output),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -686,12 +809,12 @@ class TestActivateEpilog(object):
                 """\
                 Hello from ActivateEpilog.py
                 Arguments
-                  - ActivateEpilog_py.cmd
+                  - ActivateEpilog_py{extension}
                   - 1
                   - two three
                   - 4
                   - --five
-                Hello from ActivateEpilog_py{extension}
+                Hello from ActivateEpilog.py output!
 
                 {root} has been activated.
 
@@ -716,24 +839,36 @@ class TestDeactivateEpilog(object):
         self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
-        expected_output: str,
+        expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
     ) -> None:
-        result, output = _Execute(files_to_copy, root, "Bootstrap{}".format(_extension))
+        result, output = _Execute(
+            files_to_copy,
+            root,
+            "{}Bootstrap{}".format(_execute_prefix, _extension),
+        )
         assert result == 0, output
 
         result, output = _Execute(
             [],
             root,
-            "Activate{extension} & Deactivate{extension} {args}".format(
+            "{source}{execute_prefix}Activate{extension} && {source}{execute_prefix}Deactivate{extension} {args}".format(
+                source=_source,
+                execute_prefix=_execute_prefix,
                 extension=_extension,
                 args=" ".join('"{}"'.format(arg) for arg in (arguments or [])),
             ),
         )
 
         assert result == expected_result, (result, output)
-        assert output == expected_output, output
+
+        if callable(expected_output):
+            assert expected_output(output), output
+        elif isinstance(expected_output, str):
+            assert output == expected_output, output
+        else:
+            assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path):
@@ -799,8 +934,8 @@ class TestDeactivateEpilog(object):
 
                 Hello from DeactivateEpilog.py
                 Arguments
-                  - DeactivateEpilog_py.cmd
-                Hello from DeactivateEpilog_py{extension}
+                  - DeactivateEpilog_py{extension}
+                Hello from DeactivateEpilog.py output!
 
                 {root} has been deactivated.
 
@@ -830,8 +965,8 @@ class TestDeactivateEpilog(object):
                 Hello from DeactivateEpilog{extension}
                 Hello from DeactivateEpilog.py
                 Arguments
-                  - DeactivateEpilog_py.cmd
-                Hello from DeactivateEpilog_py{extension}
+                  - DeactivateEpilog_py{extension}
+                Hello from DeactivateEpilog.py output!
 
                 {root} has been deactivated.
 
@@ -846,27 +981,45 @@ class TestDeactivateEpilog(object):
     def test_ScriptError(self, tmp_path_factory, templates_path):
         root = tmp_path_factory.mktemp("root")
 
-        with (root / f"DeactivateEpilog{_extension}").open("w") as f:
+        script_filename = root / f"DeactivateEpilog{_extension}"
+        with script_filename.open("w") as f:
             f.write(INVALID_COMMAND)
+
+        script_filename.chmod(0o755)
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return (
+                output.startswith(
+                    textwrap.dedent(
+                        """\
+
+                        {root} has been activated.
+
+                        """,
+                    ).format(
+                        root=root,
+                    ),
+                )
+                and output.endswith(
+                    textwrap.dedent(
+                        """\
+                        ERROR: DeactivateEpilog{extension} failed.
+                        """,
+                    ).format(
+                        extension=_extension,
+                    ),
+                )
+            )
+
+        # ----------------------------------------------------------------------
 
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-
-                {root} has been activated.
-
-                {error}
-                ERROR: DeactivateEpilog{extension} failed.
-                """,
-            ).format(
-                root=root,
-                error=_error_output,
-                extension=_extension,
-            ),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -916,26 +1069,40 @@ class TestDeactivateEpilog(object):
                     with Path(sys.argv[1]).open("w") as f:
                         f.write("{}")
                     """,
-                ).format(INVALID_COMMAND),
+                ).format(INVALID_COMMAND.replace("\n", "\\n")),
             )
+
+        # ----------------------------------------------------------------------
+        def IsValid(output: str) -> bool:
+            return (
+                output.startswith(
+                    textwrap.dedent(
+                        """\
+
+                        {root} has been activated.
+
+                        """,
+                    ).format(
+                        root=root,
+                    ),
+                )
+                and output.endswith(
+                    textwrap.dedent(
+                        """\
+                        ERROR: Executing the DeactivateEpilog.py output failed.
+                        """,
+                    ),
+                )
+            )
+
+        # ----------------------------------------------------------------------
 
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
             ],
             root,
-            textwrap.dedent(
-                """\
-
-                {root} has been activated.
-
-                {error}
-                ERROR: Executing the DeactivateEpilog.py output failed.
-                """,
-            ).format(
-                root=root,
-                error=_error_output,
-            ),
+            IsValid,
             expected_result=_error_result,
         )
 
@@ -956,12 +1123,12 @@ class TestDeactivateEpilog(object):
 
                 Hello from DeactivateEpilog.py
                 Arguments
-                  - DeactivateEpilog_py.cmd
+                  - DeactivateEpilog_py{extension}
                   - 1
                   - two three
                   - 4
                   - --five
-                Hello from DeactivateEpilog_py{extension}
+                Hello from DeactivateEpilog.py output!
 
                 {root} has been deactivated.
 
@@ -991,6 +1158,9 @@ def _Execute(
     for source, dest in files_to_copy:
         shutil.copyfile(source, dest)
 
+        if dest.suffix == _extension:
+            dest.chmod(0o755)
+
     result = subprocess.run(
         command,
         check=False,
@@ -998,13 +1168,14 @@ def _Execute(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         cwd=root,
+        executable=_subprocess_executable,
     )
 
     content = result.stdout.decode("utf-8")
 
     # Remove lines eventually replaced by DONE-style messages
     content = re.sub(
-        r"^[^\n]+\r\n\x1b\[1A",
+        r"^[^\n]+\r?\n\x1b\[1A",
         "",
         content,
         flags=re.MULTILINE,
@@ -1029,4 +1200,4 @@ def templates_path() -> Path:
 
 
 # ----------------------------------------------------------------------
-_error_result, _error_output = _Execute([], Path(__file__).parent, INVALID_COMMAND)
+_error_result = _Execute([], Path(__file__).parent, INVALID_COMMAND)[0]

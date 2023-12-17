@@ -10,4 +10,4 @@ sys.stdout.write("Arguments\n{}\n".format("\n".join("  - {}".format(arg) for arg
 # rather than stdout so that stdout can be used to display status information associated with long-
 # running operations.
 with Path(sys.argv[1]).open("w") as f:
-    f.write("echo Hello from DeactivateEpilog_py.cmd")
+    f.write("echo Hello from DeactivateEpilog.py output!")

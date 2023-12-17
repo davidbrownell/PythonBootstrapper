@@ -16,23 +16,24 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Version 0.3.0
+@echo Script Version 0.5.0
 @echo.
 
 @REM This script:
 @REM     1) Ensure that PYTHON_VERSION is set
 @REM     2) Ensure that PYTHON_VERSION is valid
-@REM     3) Install micromamba (if necessary)
-@REM     4) Initialize a new environment (if necessary)
+@REM     3) Delete micromamba environment (if requested)
+@REM     4) Download micromamba (if necessary)
+@REM     5) Initialize a new environment (if necessary)
 @REM        a) Create the micromamba environment
 @REM        a) Intialize the micromamba shell
 @REM        c) Activate the environment
 @REM        d) Install virtualenv
 @REM        e) Deactivate the environment
-@REM     5) Activate the environment
-@REM     6) Create a python virtual environment
-@REM     7) Invoke custom functionality (if necessary)
-@REM     8) Create Activate.cmd and Deactivate.cmd
+@REM     6) Activate the environment
+@REM     7) Create a python virtual environment
+@REM     8) Invoke custom functionality (if necessary)
+@REM     9) Create Activate.cmd and Deactivate.cmd
 
 @set _DELETE_ENVIRONMENT_ON_ERROR=0
 @set _IS_FORCE=0
@@ -40,7 +41,7 @@
 
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Parse and Process Arguments
+@REM |  Parse and Process _IS_DEBUG
 @REM |
 @REM ----------------------------------------------------------------------
 :ParseArgs
@@ -58,25 +59,6 @@
 @if %_IS_DEBUG% NEQ 1 (
     @echo off
 )
-
-if %_IS_FORCE% EQU 0 goto :Force_End
-if not exist "%USERPROFILE%\micromamba" goto :Force_End
-
-echo Removing micromamba...
-
-rmdir /S /Q "%USERPROFILE%\micromamba"
-set _ERRORLEVEL=%ERRORLEVEL%
-
-if %ERRORLEVEL% NEQ 0 (
-    echo [1ARemoving micromamba...[31m[1mFAILED[0m.
-    echo.
-
-    goto :Exit
-)
-
-echo [1ARemoving micromamba...[32m[1mDONE[0m.
-
-:Force_End
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -133,13 +115,13 @@ goto :EnsureValidVersion_End
 :InvalidVersion
 echo [1AValidating python version...[31m[1mFAILED[0m.
 echo.
-echo The PYTHON_VERSION environment variable must be set to a valid python version.
-echo.
-echo Current Value:
-echo     %PYTHON_VERSION%
-echo.
-echo Example:
-echo     set PYTHON_VERISON=3.12
+echo [31m[1mERROR:[0m The PYTHON_VERSION environment variable must be set to a valid python version.
+echo [31m[1mERROR:[0m
+echo [31m[1mERROR:[0m Current Value:
+echo [31m[1mERROR:[0m     %PYTHON_VERSION%
+echo [31m[1mERROR:[0m
+echo [31m[1mERROR:[0m Example:
+echo [31m[1mERROR:[0m     set PYTHON_VERISON=3.12
 echo.
 
 set _ERRORLEVEL=-1
@@ -147,9 +129,64 @@ goto :Exit
 
 :EnsureValidVersion_End
 
+echo.
+echo Python Version %PYTHON_VERSION%
+echo.
+
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Install micromamba (if necessary)
+@REM |  Delete micromamba (if requested)
+@REM |
+@REM ----------------------------------------------------------------------
+if %_IS_FORCE% EQU 0 goto :Force_End
+if not exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" goto :Force_Env_End
+
+echo Removing the Python%PYTHON_VERSION% micromamba environment...
+
+call :_CreateTempFileName
+
+REM rmdir doesn't set ERRORLEVEL properly on failure, so we need to look at the size of the output
+REM To determin if failures have occurred.
+rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+set _ERRORLEVEL=%ERRORLEVEL%
+
+set _OUTPUT_SIZE=0
+for /f %%i in ("%_BOOTSTRAP_IMPL_TEMP_FILENAME%") do set _OUTPUT_SIZE=%%~zi
+if %_OUTPUT_SIZE% NEQ 0 (
+    echo [1ARemoving the Python%PYTHON_VERSION% micromamba environment...[31m[1mFAILED[0m.
+    echo.
+
+    type "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
+    goto :Exit
+)
+
+del "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
+echo [1ARemoving the Python%PYTHON_VERSION% micromamba environment...[32m[1mDONE[0m.
+
+:Force_Env_End
+
+if not exist "%USERPROFILE%\micromamba\micromamba.exe" goto :Force_Exe_End
+
+echo Removing the micromamba executable...
+
+del "%USERPROFILE%\micromamba\micromamba.exe"
+set _ERRORLEVEL=%ERRORLEVEL%
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [1ARemoving the micromamba executable...[31m[1mFAILED[0m.
+    echo.
+
+    goto :Exit
+)
+
+echo [1ARemoving the micromamba executable...[32m[1mDONE[0m.
+
+:Force_Exe_End
+:Force_End
+
+@REM ----------------------------------------------------------------------
+@REM |
+@REM |  Download micromamba (if necessary)
 @REM |
 @REM ----------------------------------------------------------------------
 echo Downloading micromamba...
@@ -203,12 +240,12 @@ if exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" (
 
 echo [1AInitializing the micromamba environment...[32m[1mDONE[0m (a new environment will be created^).
 
+@REM ----------------------------------------------------------------------
+@REM |  Create the micromamba environment
 echo.
 echo.
 echo.
 
-@REM ----------------------------------------------------------------------
-@REM |  Create the micromamba environment
 "%USERPROFILE%\micromamba\micromamba.exe" create --channel conda-forge --name Python%PYTHON_VERSION% --root-prefix "%USERPROFILE%\micromamba" --yes python~=%PYTHON_VERSION%.0
 set _ERRORLEVEL=%ERRORLEVEL%
 
@@ -223,40 +260,26 @@ REM won't be fully initialized.
 set _DELETE_ENVIRONMENT_ON_ERROR=1
 
 @REM ----------------------------------------------------------------------
-@REM -- Initialize the micromamba shell
-echo Initializing the micromamba shell...
+@REM |  Activate the environment
+echo Activating the micromamba environment...
 call :_CreateTempFileName
 
-call micromamba.bat shell init --root-prefix=%USERPROFILE%\micromamba --shell cmd.exe > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+call micromamba.bat activate Python%PYTHON_VERSION% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
-    echo [1AInitializing the micromamba shell...[31m[1mFAILED[0m.
+    echo [1AActivating the micromamba environment...[31m[1mFAILED[0m.
     echo.
 
     type "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
     goto :Exit
 )
 
-echo [1AInitializing the micromamba shell...[32m[1mDONE[0m.
 call :_DeleteTempFile
-
-@REM ----------------------------------------------------------------------
-@REM |  Activate the environment
-echo Activating the micromamba environment...
-
-call micromamba.bat activate Python%PYTHON_VERSION%
-set _ERRORLEVEL=%ERRORLEVEL%
-
-if %_ERRORLEVEL% NEQ 0 (
-    echo [1AActivating the micromamba environment...[31m[1mFAILED[0m.
-    goto :Exit
-)
-
 echo [1AActivating the micromamba environment...[32m[1mDONE[0m.
 
 @REM ----------------------------------------------------------------------
-@REM |  Install virtual env
+@REM |  Install virtualenv
 echo.
 echo.
 echo.
@@ -269,7 +292,7 @@ echo.
 echo.
 
 @REM Deactivate the environment (note that this will always be done, even if the
-@REM previous command failed).
+@REM previous commands failed).
 echo Deactivating the micromamba environment...
 
 call micromamba.bat deactivate
@@ -313,7 +336,10 @@ echo [1AActivating the micromamba environment...[32m[1mDONE[0m.
 echo Creating a python virtual environment...
 
 call :_CreateTempFileName
-virtualenv --clear --no-periodic-update --no-vcs-ignore --verbose .\Generated\Windows\Python%PYTHON_VERSION% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
+
+if %_IS_FORCE% EQU 1 set _CLEAR_FLAG="--clear"
+
+virtualenv %_CLEAR_FLAG% --no-periodic-update --no-vcs-ignore --verbose .\Generated\Windows\Python%PYTHON_VERSION% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
@@ -590,7 +616,7 @@ endlocal & exit /B %_ERRORLEVEL%
 @REM ----------------------------------------------------------------------
 @REM ----------------------------------------------------------------------
 :_CreateTempFileName
-set _BOOTSTRAP_IMPL_TEMP_FILENAME=%CD%BootstrapImpl-!RANDOM!-!Time:~6,5!
+set _BOOTSTRAP_IMPL_TEMP_FILENAME=%CD%\BootstrapImpl-!RANDOM!-!Time:~6,5!
 goto :EOF
 
 @REM ----------------------------------------------------------------------
