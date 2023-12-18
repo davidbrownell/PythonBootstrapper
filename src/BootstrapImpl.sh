@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.5.0"
+echo "Script Version 0.6.0"
 echo ""
 
 # This script:
@@ -27,7 +27,7 @@ echo ""
 #     4) Install micromamba (if necessary)
 #     5) Initialize a new environment (if necessary)
 #        a) Create the micromamba environment
-#        a) Intialize the micromamba shell
+#        b) Intialize the micromamba shell
 #        c) Activate the environment
 #        d) Install virtualenv
 #        e) Deactivate the environment
@@ -97,12 +97,23 @@ is_debug=0
 # |  Parse and Process is_debug
 # |
 # ----------------------------------------------------------------------
-for arg in "$@"; do
-    if [[ "${arg}" == "--force" ]]; then
-        is_force=1
-    elif [[ "${arg}" == "--debug" ]]; then
-        is_debug=1
+arguments=()
+
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--python-version" ]]; then
+        PYTHON_VERSION=$2
+        shift
+    else
+        if [[ "$1" == "--debug" ]]; then
+            is_debug=1
+        elif [[ "$1" == "--force" ]]; then
+            is_force=1
+        fi
+
+        arguments+=("$1")
     fi
+
+    shift
 done
 
 # ----------------------------------------------------------------------
@@ -459,7 +470,7 @@ if [[ -f "BootstrapEpilog.sh" ]] || [[ -f "BootstrapEpilog.py" ]]; then
     fi
 
     if [[ -f "BootstrapEpilog.py" ]]; then
-        python BootstrapEpilog.py BootstrapEpilog_py.sh "$@"
+        python BootstrapEpilog.py BootstrapEpilog_py.sh "${arguments[@]}"
         error=$?
 
         if [[ ${error} != 0 ]]; then
@@ -534,8 +545,12 @@ micromamba activate "Python${PYTHON_VERSION}" || exit
 source "./Generated/${PLATFORM}/Python${PYTHON_VERSION}/bin/activate" || exit
 
 # Set the prompt
-# TODO: Don't let these stack
-PS1="(Python${PYTHON_VERSION}) \${original_prompt}"
+if [[ -z \${PYTHON_ENVIRONMENT_IS_ACTIVATED} ]]; then
+    # If here, the variable is not set
+    PS1="(Python${PYTHON_VERSION}) \${original_prompt}"
+else
+    PS1="\${original_prompt}"
+fi
 
 if [[ -f "ActivateEpilog.sh" ]]; then
     source ./ActivateEpilog.sh "\$@"
@@ -578,6 +593,7 @@ echo ""
 echo "[61m[1m${this_dir}[0m has been [32m[1mactivated[0m."
 echo ""
 
+export PYTHON_ENVIRONMENT_IS_ACTIVATED=1
 END_OF_CONTENT
 
 chmod u+x Activate.sh
@@ -657,6 +673,7 @@ echo ""
 echo "[61m[1m${this_dir}[0m has been [31m[1mdeactivated[0m."
 echo ""
 
+unset PYTHON_ENVIRONMENT_IS_ACTIVATED
 END_OF_CONTENT
 
 chmod u+x Deactivate.sh
@@ -670,8 +687,8 @@ echo "[1ACreating Deactivate.sh...[32m[1mDONE[0m."
 echo ""
 echo ""
 echo ""
-echo "-----------------------------------------------------------------------"
-echo "-----------------------------------------------------------------------"
+echo "[32m[1m-----------------------------------------------------------------------[0m"
+echo "[32m[1m-----------------------------------------------------------------------[0m"
 echo ""
 echo "Your repository has been successfully bootstrapped. Run the following"
 echo "commands to activate and deactivate the local development environment:"
@@ -679,8 +696,8 @@ echo ""
 echo "  [61m[1mActivate.sh[0m:    ${this_dir}/[61m[1mActivate.sh[0m"
 echo "  [61m[1mDeactivate.sh[0m:  ${this_dir}/[61m[1mDeactivate.sh[0m"
 echo ""
-echo "-----------------------------------------------------------------------"
-echo "-----------------------------------------------------------------------"
+echo "[32m[1m-----------------------------------------------------------------------[0m"
+echo "[32m[1m-----------------------------------------------------------------------[0m"
 echo ""
 echo ""
 echo ""

@@ -19,6 +19,14 @@
 @REM |  This script downloads and invokes BoostrapImpl.cmd from the PythonBootstrapper
 @REM |  repository (https://github.com/davidbrownell/PythonBootstrapper).
 @REM |
+@REM |  Arguments:
+@REM |
+@REM |      --debug                         Display additional debugging information.
+@REM |
+@REM |      --force                         Ensure that a new python environment is installed, even if it already exists.
+@REM |
+@REM |      --python-version <version>      Specify the python version to install; the default python version is installed if not specified.
+@REM |
 @REM ----------------------------------------------------------------------
 @setlocal EnableDelayedExpansion
 @pushd %~dp0
