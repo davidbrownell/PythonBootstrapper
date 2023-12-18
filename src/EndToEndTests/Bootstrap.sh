@@ -20,6 +20,14 @@
 # |  This script downloads and invokes BootstrapImpl.sh from the PythonBootstrapper
 # |  repository (https://github.com/davidbrownell/PythonBootstrapper).
 # |
+# |  Arguments:
+# |
+# |      --debug                         Display additional debugging information.
+# |
+# |      --force                         Ensure that a new python environment is installed, even if it already exists.
+# |
+# |      --python-version <version>      Specify the python version to install; the default python version is installed if not specified.
+# |
 # ----------------------------------------------------------------------
 set +v # Continue on errors
 

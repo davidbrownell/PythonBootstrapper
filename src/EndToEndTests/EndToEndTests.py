@@ -28,14 +28,18 @@ import pytest
 
 # ----------------------------------------------------------------------
 INVALID_COMMAND                             = "this is an invalid command"
-
+DEFAULT_PYTHON_VERSION                      = (Path(__file__).parent.parent.parent / "default_version").open().read().strip()
+PYTHON_VERSIONS                             = [
+    None, # Use default version
+    "3.11",
+]
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
     _extension = ".cmd"
     _home_dir = os.environ["USERPROFILE"]
     _execute_prefix = ""
-    _version = "0.5.0"
+    _script_version = "0.6.0"
     _init_shell_output = ""
     _source = ""
     _subprocess_executable = None
@@ -44,7 +48,7 @@ else:
     _extension = ".sh"
     _home_dir = os.environ["HOME"]
     _execute_prefix = "./"
-    _version = "0.5.0"
+    _script_version = "0.6.0"
     _init_shell_output = "Initializing the micromamba shell...DONE.\n"
     _source = ". "
     _subprocess_executable = "/bin/bash"
@@ -67,16 +71,25 @@ assert micromamba_path.is_dir(), textwrap.dedent(
 
 
 # ----------------------------------------------------------------------
+@pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 class TestBootstrapEpilog(object):
     # ----------------------------------------------------------------------
+    @staticmethod
     def Execute(
-        self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
+        *,
+        python_version: Optional[str]=None,
     ) -> None:
+        if arguments is None:
+            arguments = []
+
+        if python_version is not None:
+            arguments += ["--python-version", python_version]
+
         result, output = _Execute(
             files_to_copy,
             root,
@@ -97,8 +110,13 @@ class TestBootstrapEpilog(object):
             assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
-    def test_Empty(self, tmp_path_factory, templates_path):
+    def test_Empty(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         self.Execute(
             [
@@ -109,12 +127,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -142,17 +159,25 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptFile(self, tmp_path_factory, templates_path):
+    def test_ScriptFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         self.Execute(
             [
@@ -164,12 +189,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -199,17 +223,25 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonFile(self, tmp_path_factory, templates_path):
+    def test_PythonFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         self.Execute(
             [
@@ -221,12 +253,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -259,17 +290,25 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path):
+    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         self.Execute(
             [
@@ -282,12 +321,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -321,16 +359,19 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
                 deactivate=(root / "Deactivate{}".format(_extension)).resolve(),
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptError(self, tmp_path_factory, templates_path):
+    def test_ScriptError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         script_filename = root / f"BootstrapEpilog{_extension}"
@@ -338,6 +379,11 @@ class TestBootstrapEpilog(object):
             f.write(INVALID_COMMAND)
 
         script_filename.chmod(0o755)
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         # ----------------------------------------------------------------------
         def IsValid(output: str) -> bool:
@@ -347,12 +393,11 @@ class TestBootstrapEpilog(object):
                         """\
                         Downloading Bootstrap code...DONE.
 
-                        Script Version {version}
+                        Script Version {script_version}
 
-                        Downloading default python version information...DONE.
-                        Validating python version...DONE.
+                        {downloading_default_python_version}Validating python version...DONE.
 
-                        Python Version 3.11
+                        Python Version {python_version}
 
                         Downloading micromamba...DONE (already exists).
                         Initializing the micromamba environment...DONE (already exists).
@@ -361,7 +406,9 @@ class TestBootstrapEpilog(object):
 
                         """,
                     ).format(
-                        version=_version,
+                        script_version=_script_version,
+                        downloading_default_python_version=downloading_default_python_version,
+                        python_version=python_version or DEFAULT_PYTHON_VERSION,
                         init_shell_output=_init_shell_output,
                     ),
                 )
@@ -373,7 +420,7 @@ class TestBootstrapEpilog(object):
                     ).format(
                         extension=_extension,
                     ),
-                )
+                ),
             )
 
         # ----------------------------------------------------------------------
@@ -385,10 +432,11 @@ class TestBootstrapEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonError(self, tmp_path_factory, templates_path):
+    def test_PythonError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"BootstrapEpilog.py").open("w") as f:
@@ -401,6 +449,11 @@ class TestBootstrapEpilog(object):
                 ),
             )
 
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
+
         self.Execute(
             [
                 (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
@@ -410,12 +463,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -425,14 +477,17 @@ class TestBootstrapEpilog(object):
                 ERROR: BootstrapEpilog.py failed.
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
             ),
             expected_result=2,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonResultError(self, tmp_path_factory, templates_path):
+    def test_PythonResultError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"BootstrapEpilog.py").open("w") as f:
@@ -449,6 +504,11 @@ class TestBootstrapEpilog(object):
                 ).format(INVALID_COMMAND.replace("\n", "\\n")),
             )
 
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
+
         # ----------------------------------------------------------------------
         def IsValid(output: str) -> bool:
             return (
@@ -457,12 +517,11 @@ class TestBootstrapEpilog(object):
                         """\
                         Downloading Bootstrap code...DONE.
 
-                        Script Version {version}
+                        Script Version {script_version}
 
-                        Downloading default python version information...DONE.
-                        Validating python version...DONE.
+                        {downloading_default_python_version}Validating python version...DONE.
 
-                        Python Version 3.11
+                        Python Version {python_version}
 
                         Downloading micromamba...DONE (already exists).
                         Initializing the micromamba environment...DONE (already exists).
@@ -471,7 +530,9 @@ class TestBootstrapEpilog(object):
 
                         """,
                     ).format(
-                        version=_version,
+                        script_version=_script_version,
+                        downloading_default_python_version=downloading_default_python_version,
+                        python_version=python_version or DEFAULT_PYTHON_VERSION,
                         init_shell_output=_init_shell_output,
                     ),
                 )
@@ -491,11 +552,17 @@ class TestBootstrapEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_Arguments(self, tmp_path_factory, templates_path):
+    def test_Arguments(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
+
+        if python_version is None:
+            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+        else:
+            downloading_default_python_version = ""
 
         self.Execute(
             [
@@ -507,12 +574,11 @@ class TestBootstrapEpilog(object):
                 """\
                 Downloading Bootstrap code...DONE.
 
-                Script Version {version}
+                Script Version {script_version}
 
-                Downloading default python version information...DONE.
-                Validating python version...DONE.
+                {downloading_default_python_version}Validating python version...DONE.
 
-                Python Version 3.11
+                Python Version {python_version}
 
                 Downloading micromamba...DONE (already exists).
                 Initializing the micromamba environment...DONE (already exists).
@@ -549,7 +615,9 @@ class TestBootstrapEpilog(object):
 
                 """,
             ).format(
-                version=_version,
+                script_version=_script_version,
+                downloading_default_python_version=downloading_default_python_version,
+                python_version=python_version or DEFAULT_PYTHON_VERSION,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
@@ -561,24 +629,32 @@ class TestBootstrapEpilog(object):
                 "4",
                 "--five",
             ],
+            python_version=python_version,
         )
 
 
 # ----------------------------------------------------------------------
+@pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 class TestActivateEpilog(object):
     # ----------------------------------------------------------------------
+    @staticmethod
     def Execute(
-        self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
+        python_version: Optional[str]=None,
     ) -> None:
+        if python_version is not None:
+            python_version_arg = " --python-version {}".format(python_version)
+        else:
+            python_version_arg = ""
+
         result, output = _Execute(
             files_to_copy,
             root,
-            "{}Bootstrap{}".format(_execute_prefix, _extension),
+            "{}Bootstrap{}{}".format(_execute_prefix, _extension, python_version_arg),
         )
         assert result == 0, output
 
@@ -603,7 +679,7 @@ class TestActivateEpilog(object):
             assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
-    def test_Empty(self, tmp_path_factory, templates_path):
+    def test_Empty(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -618,10 +694,11 @@ class TestActivateEpilog(object):
 
                 """,
             ).format(root),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptFile(self, tmp_path_factory, templates_path):
+    def test_ScriptFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -641,10 +718,11 @@ class TestActivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonFile(self, tmp_path_factory, templates_path):
+    def test_PythonFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -667,10 +745,11 @@ class TestActivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path):
+    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -695,10 +774,11 @@ class TestActivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptError(self, tmp_path_factory, templates_path):
+    def test_ScriptError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         script_filename = root / f"ActivateEpilog{_extension}"
@@ -728,10 +808,11 @@ class TestActivateEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonError(self, tmp_path_factory, templates_path):
+    def test_PythonError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"ActivateEpilog.py").open("w") as f:
@@ -755,10 +836,11 @@ class TestActivateEpilog(object):
                 """,
             ),
             expected_result=2,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonResultError(self, tmp_path_factory, templates_path):
+    def test_PythonResultError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"ActivateEpilog.py").open("w") as f:
@@ -793,10 +875,11 @@ class TestActivateEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_Arguments(self, tmp_path_factory, templates_path):
+    def test_Arguments(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -829,24 +912,32 @@ class TestActivateEpilog(object):
                 "4",
                 "--five",
             ],
+            python_version=python_version,
         )
 
 
 # ----------------------------------------------------------------------
+@pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 class TestDeactivateEpilog(object):
     # ----------------------------------------------------------------------
+    @staticmethod
     def Execute(
-        self,
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
         expected_result: int=0,
         arguments: Optional[list[str]]=None,
+        python_version: Optional[str]=None,
     ) -> None:
+        if python_version is not None:
+            python_version_arg = " --python-version {}".format(python_version)
+        else:
+            python_version_arg = ""
+
         result, output = _Execute(
             files_to_copy,
             root,
-            "{}Bootstrap{}".format(_execute_prefix, _extension),
+            "{}Bootstrap{}{}".format(_execute_prefix, _extension, python_version_arg),
         )
         assert result == 0, output
 
@@ -871,7 +962,7 @@ class TestDeactivateEpilog(object):
             assert False # pragma: no cover
 
     # ----------------------------------------------------------------------
-    def test_Empty(self, tmp_path_factory, templates_path):
+    def test_Empty(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -889,10 +980,11 @@ class TestDeactivateEpilog(object):
 
                 """,
             ).format(root=root),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptFile(self, tmp_path_factory, templates_path):
+    def test_ScriptFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -915,10 +1007,11 @@ class TestDeactivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonFile(self, tmp_path_factory, templates_path):
+    def test_PythonFile(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -944,10 +1037,11 @@ class TestDeactivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path):
+    def test_ScriptAndPythonFiles(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -975,10 +1069,11 @@ class TestDeactivateEpilog(object):
                 extension=_extension,
                 root=root,
             ),
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_ScriptError(self, tmp_path_factory, templates_path):
+    def test_ScriptError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         script_filename = root / f"DeactivateEpilog{_extension}"
@@ -1021,10 +1116,11 @@ class TestDeactivateEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonError(self, tmp_path_factory, templates_path):
+    def test_PythonError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"DeactivateEpilog.py").open("w") as f:
@@ -1053,10 +1149,11 @@ class TestDeactivateEpilog(object):
                 root=root,
             ),
             expected_result=2,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_PythonResultError(self, tmp_path_factory, templates_path):
+    def test_PythonResultError(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         with (root / f"DeactivateEpilog.py").open("w") as f:
@@ -1104,10 +1201,11 @@ class TestDeactivateEpilog(object):
             root,
             IsValid,
             expected_result=_error_result,
+            python_version=python_version,
         )
 
     # ----------------------------------------------------------------------
-    def test_Arguments(self, tmp_path_factory, templates_path):
+    def test_Arguments(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         self.Execute(
@@ -1143,6 +1241,7 @@ class TestDeactivateEpilog(object):
                 "4",
                 "--five",
             ],
+            python_version=python_version,
         )
 
 

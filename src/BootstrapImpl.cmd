@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.5.0
+@echo Script Version 0.6.0
 @echo.
 
 @REM This script:
@@ -26,10 +26,9 @@
 @REM     4) Download micromamba (if necessary)
 @REM     5) Initialize a new environment (if necessary)
 @REM        a) Create the micromamba environment
-@REM        a) Intialize the micromamba shell
-@REM        c) Activate the environment
-@REM        d) Install virtualenv
-@REM        e) Deactivate the environment
+@REM        b) Activate the environment
+@REM        c) Install virtualenv
+@REM        d) Deactivate the environment
 @REM     6) Activate the environment
 @REM     7) Create a python virtual environment
 @REM     8) Invoke custom functionality (if necessary)
@@ -41,19 +40,37 @@
 
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Parse and Process _IS_DEBUG
+@REM |  Parse and Process Arguments
 @REM |
 @REM ----------------------------------------------------------------------
 :ParseArgs
-@if '%1' NEQ '' (
-    @set _COMMAND_LINE_ARGS=%_COMMAND_LINE_ARGS% %1
+@if '%1' EQU '' @goto :ParseArgs_End
 
-    @if '%1' EQU '--debug' @set _IS_DEBUG=1
-    @if '%1' EQU '--force' @set _IS_FORCE=1
+@set ARG=%1
+@set ARG=%ARG:"=%
 
-    @shift /1
-    @goto :ParseArgs
-)
+@if "%ARG%" EQU "--debug" @set _IS_DEBUG=1
+@if "%ARG%" EQU "--force" @set _IS_FORCE=1
+
+@if "%ARG%" NEQ "--python-version" @goto :ParseArgs_PythonVersionEnd
+
+@shift /1
+@set ARG=%1
+@set ARG=%ARG:"=%
+
+@set PYTHON_VERSION=%ARG%
+@goto :ParseArgs_Next
+
+:ParseArgs_PythonVersionEnd
+
+@set _COMMAND_LINE_ARGS=%_COMMAND_LINE_ARGS% %1
+
+:ParseArgs_Next
+
+@shift /1
+@goto :ParseArgs
+
+:ParseArgs_End
 
 @REM ----------------------------------------------------------------------
 @if %_IS_DEBUG% NEQ 1 (
@@ -574,8 +591,8 @@ echo [1ACreating Deactivate.cmd...[32m[1mDONE[0m.
 echo.
 echo.
 echo.
-echo -----------------------------------------------------------------------
-echo -----------------------------------------------------------------------
+echo [32m[1m-----------------------------------------------------------------------[0m
+echo [32m[1m-----------------------------------------------------------------------[0m
 echo.
 echo Your repository has been successfully bootstrapped. Run the following
 echo commands to activate and deactivate the local development environment:
@@ -583,8 +600,8 @@ echo.
 echo   [61m[1mActivate.cmd[0m:    %cd%\[61m[1mActivate.cmd[0m
 echo   [61m[1mDeactivate.cmd[0m:  %cd%\[61m[1mDeactivate.cmd[0m
 echo.
-echo -----------------------------------------------------------------------
-echo -----------------------------------------------------------------------
+echo [32m[1m-----------------------------------------------------------------------[0m
+echo [32m[1m-----------------------------------------------------------------------[0m
 echo.
 echo.
 echo.
