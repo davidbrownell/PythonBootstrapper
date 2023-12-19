@@ -1,21 +1,5 @@
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Bootstrap.cmd
-@REM |
-@REM |  David Brownell <db@DavidBrownell.com>
-@REM |      2023-12-11 14:37:24
-@REM |
-@REM ----------------------------------------------------------------------
-@REM |
-@REM |  Copyright David Brownell 2023
-@REM |  Distributed under the Boost Software License, Version 1.0. See
-@REM |  accompanying file LICENSE_1_0.txt or copy at
-@REM |  http://www.boost.org/LICENSE_1_0.txt.
-@REM |
-@REM ----------------------------------------------------------------------
-
-@REM ----------------------------------------------------------------------
-@REM |
 @REM |  This script downloads and invokes BoostrapImpl.cmd from the PythonBootstrapper
 @REM |  repository (https://github.com/davidbrownell/PythonBootstrapper).
 @REM |
