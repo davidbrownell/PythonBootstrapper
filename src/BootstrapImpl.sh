@@ -270,7 +270,7 @@ esac
 if [[ -f "${HOME}/.local/bin/micromamba" ]]; then
     echo "[1ADownloading micromamba...[32m[1mDONE[0m (already exists)."
 else
-    [[ -d ~/.local/bin ]] || mkdir --parents ~/.local/bin
+    [[ -d ~/.local/bin ]] || mkdir -p ~/.local/bin
     pushd ~/.local/bin > /dev/null || exit
 
     temp_output_name=$(mktemp BootstrapImpl.XXXXXX)

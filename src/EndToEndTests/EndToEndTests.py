@@ -32,6 +32,7 @@ DEFAULT_PYTHON_VERSION                      = (Path(__file__).parent.parent.pare
 PYTHON_VERSIONS                             = [
     None, # Use default version
     "3.11",
+    "3.12",
 ]
 
 # ----------------------------------------------------------------------

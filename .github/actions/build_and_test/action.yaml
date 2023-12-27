@@ -1,0 +1,64 @@
+# ----------------------------------------------------------------------
+# |
+# |  action.yaml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2023-12-27 11:46:20
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2023
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] Build and Test"
+description: "Builds and tests the project."
+
+inputs:
+  operating_system:
+    required: true
+    type: string
+
+  script_prefix:
+    required: true
+    type: string
+
+  script_extension:
+    required: true
+    type: string
+
+  shell_name:
+    required: true
+    type: string
+
+  source_command:
+    required: true
+    type: string
+
+  sudo_command:
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Bootstrap 3.11
+      shell: ${{ inputs.shell_name }}
+      run: |-
+        cd src/EndToEndTests
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.11
+
+    - name: Bootstrap 3.12
+      shell: ${{ inputs.shell_name }}
+      run: |-
+        cd src/EndToEndTests
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.12
+
+    - name: EndToEndTests
+      shell: ${{ inputs.shell_name }}
+      run: |-
+        cd src/EndToEndTests
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        pytest EndToEndTests.py --verbose -vv --capture=no

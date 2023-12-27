@@ -1,3 +1,18 @@
+# ----------------------------------------------------------------------
+# |
+# |  build_and_test.yaml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2023-12-27 11:22:25
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2023
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
 name: "Build and Test"
 run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
 
@@ -22,6 +37,33 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      COLUMNS: "200"
+      SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
+      PYTHONIOENCODING: "UTF-8"
+
     steps:
-      - name: "Placeholder"
-        run: echo "Placeholder"
+      # Ensure that windows machines support long paths
+      - name: git Long File Path Support on Windows
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        run: |-
+          git config --system core.longpaths true
+
+      - name: "Checkout Source"
+        uses: actions/checkout@v4
+
+      - name: "Initialize"
+        id: initialize
+        uses: ./.github/actions/initialize
+        with:
+          operating_system: ${{ matrix.os }}
+
+      - name: Build and Test
+        uses: ./.github/actions/build_and_test
+        with:
+          operating_system: ${{ matrix.os }}
+          script_prefix: ${{ steps.initialize.outputs.script_prefix }}
+          script_extension: ${{ steps.initialize.outputs.script_extension }}
+          shell_name: ${{ steps.initialize.outputs.shell_name }}
+          source_command: ${{ steps.initialize.outputs.source_command }}
+          sudo_command: ${{ steps.initialize.outputs.sudo_command }}
