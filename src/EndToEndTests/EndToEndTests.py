@@ -28,7 +28,6 @@ import pytest
 
 # ----------------------------------------------------------------------
 INVALID_COMMAND                             = "this is an invalid command"
-DEFAULT_PYTHON_VERSION                      = (Path(__file__).parent.parent.parent / "default_version").open().read().strip()
 PYTHON_VERSIONS                             = [
     None, # Use default version
     "3.11",
@@ -63,12 +62,13 @@ micromamba_path = Path(_home_dir) / "micromamba"
 # values will be different each time the script is run and when different versions are introduced.
 assert micromamba_path.is_dir(), textwrap.dedent(
     """\
-    These tests must be run AFTER Bootstrap{} has been run successfully at least once.
+    These tests must be run AFTER Bootstrap{ext} has been run successfully at least once.
 
-    To do this, navigate to `../../Templates` and run the Bootstrap script that corresponds to
-    your operating system.
+    To do this, navigate to this directory and run the Bootstrap{ext}.
     """,
-).format(_extension)
+).format(
+    ext=_extension,
+)
 
 
 # ----------------------------------------------------------------------
@@ -100,6 +100,9 @@ class TestBootstrapEpilog(object):
                 " ".join('"{}"'.format(arg) for arg in (arguments or [])),
             ),
         )
+
+        if python_version is None:
+            output = re.sub(r"Python Version \d+\.\d+", "Python Version None", output)
 
         assert result == expected_result, (result, output)
 
@@ -162,7 +165,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
@@ -226,7 +229,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
@@ -293,7 +296,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
@@ -362,7 +365,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
@@ -409,7 +412,7 @@ class TestBootstrapEpilog(object):
                     ).format(
                         script_version=_script_version,
                         downloading_default_python_version=downloading_default_python_version,
-                        python_version=python_version or DEFAULT_PYTHON_VERSION,
+                        python_version=python_version,
                         init_shell_output=_init_shell_output,
                     ),
                 )
@@ -480,7 +483,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
             ),
             expected_result=2,
@@ -533,7 +536,7 @@ class TestBootstrapEpilog(object):
                     ).format(
                         script_version=_script_version,
                         downloading_default_python_version=downloading_default_python_version,
-                        python_version=python_version or DEFAULT_PYTHON_VERSION,
+                        python_version=python_version,
                         init_shell_output=_init_shell_output,
                     ),
                 )
@@ -618,7 +621,7 @@ class TestBootstrapEpilog(object):
             ).format(
                 script_version=_script_version,
                 downloading_default_python_version=downloading_default_python_version,
-                python_version=python_version or DEFAULT_PYTHON_VERSION,
+                python_version=python_version,
                 init_shell_output=_init_shell_output,
                 extension=_extension,
                 activate=(root / "Activate{}".format(_extension)).resolve(),
