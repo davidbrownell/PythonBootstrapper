@@ -48,6 +48,9 @@ echo "[1ADownloading Bootstrap code...[32m[1mDONE[0m."
 # |  Invoke BootstrapImpl.sh
 # |
 # ----------------------------------------------------------------------
+# Temporary workaround so that MacOS build passes. This will be removed once the fix goes into main.
+cp ../BootstrapImpl.sh BootstrapImpl.sh # TODO: Remove this line
+
 ./BootstrapImpl.sh "$@"
 error=$?
 
