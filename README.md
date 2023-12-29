@@ -2,7 +2,7 @@
 
 This repository includes tools and scripts that install python locally in as consistent and benign as way as possible. Supports side-by-side installations for different versions of python and minimizes overhead through the use of virtual environments.
 
-[Using a PythonBootstrapper Repository](#using-a-pythonbootstrapper-repository)
+[Using a PythonBootstrapper Repository](#using-a-pythonbootstrapper-repository)<br/>
 [Creating a PythonBootstrapper Repository](#creating-a-pythonbootstrapper-repository)
 
 ## Features
