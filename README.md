@@ -38,6 +38,18 @@ This repository includes tools and scripts that install python locally in as con
 
 ![deactivate screenshot](./Screenshots/Deactivate.png)
 
+### Testing
+
+All changes to this repository are validated [GitHub runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources) across the [MacOS](https://www.apple.com/macos), [Ubuntu](https://ubuntu.com/), and [Windows](https://www.microsoft.com/en-us/windows) operating systems using the [Python versions](https://www.python.org/downloads/):
+
+| Version | First Released | End of Support |
+| --- | --- | --- |
+| 3.12 | October 2023 | October 2028 |
+| 3.11 | October 2022 | October 2027 |
+| 3.10 | October 2021 | October 2026 |
+| 3.9 | October 2020 | October 2025 |
+| 3.8 | October 2019 | October 2024 |
+
 ## Using a PythonBootstrapper Repository
 
 To begin using a git repository leveraging PythonBootstrapper functionality, run the scripts defined here in the following sections.
