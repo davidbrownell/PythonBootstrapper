@@ -30,8 +30,11 @@ import pytest
 INVALID_COMMAND                             = "this is an invalid command"
 PYTHON_VERSIONS                             = [
     None, # Use default version
-    "3.11",
     "3.12",
+    "3.11",
+    "3.10",
+    "3.9",
+    "3.8",
 ]
 
 # ----------------------------------------------------------------------
