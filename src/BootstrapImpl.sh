@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.6.0"
+echo "Script Version 0.6.1"
 echo ""
 
 # This script:
@@ -424,7 +424,7 @@ fi
 # |  Create a python virtual environment
 # |
 # ----------------------------------------------------------------------
-echo "Creating a python virtual environment..."
+echo "Creating the python virtual environment..."
 
 temp_output_name=$(mktemp BootstrapImpl.XXXXXX)
 
@@ -436,7 +436,7 @@ virtualenv ${clear_flag} --no-periodic-update --no-vcs-ignore --verbose "./Gener
 error=$?
 
 if [[ ${error} != 0 ]]; then
-    echo "[1ACreating a python virtual environment...[31m[1mFAILED[0m."
+    echo "[1ACreating the python virtual environment...[31m[1mFAILED[0m."
     echo ""
 
     cat "${temp_output_name}"
@@ -446,7 +446,7 @@ if [[ ${error} != 0 ]]; then
 fi
 
 rm "${temp_output_name}"
-echo "[1ACreating a python virtual environment...[32m[1mDONE[0m."
+echo "[1ACreating the python virtual environment...[32m[1mDONE[0m."
 
 # ----------------------------------------------------------------------
 # |
