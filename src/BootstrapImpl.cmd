@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.6.0
+@echo Script Version 0.6.1
 @echo.
 
 @REM This script:
@@ -30,7 +30,7 @@
 @REM        c) Install virtualenv
 @REM        d) Deactivate the environment
 @REM     6) Activate the environment
-@REM     7) Create a python virtual environment
+@REM     7) Create the python virtual environment
 @REM     8) Invoke custom functionality (if necessary)
 @REM     9) Create Activate.cmd and Deactivate.cmd
 
@@ -43,6 +43,8 @@
 @REM |  Parse and Process Arguments
 @REM |
 @REM ----------------------------------------------------------------------
+@set _COMMAND_LINE_ARGS=
+
 :ParseArgs
 @if '%1' EQU '' @goto :ParseArgs_End
 
@@ -54,7 +56,9 @@
 
 @if "%ARG%" NEQ "--python-version" @goto :ParseArgs_PythonVersionEnd
 
+@REM Extract the python version
 @shift /1
+
 @set ARG=%1
 @set ARG=%ARG:"=%
 
@@ -62,11 +66,9 @@
 @goto :ParseArgs_Next
 
 :ParseArgs_PythonVersionEnd
-
 @set _COMMAND_LINE_ARGS=%_COMMAND_LINE_ARGS% %1
 
 :ParseArgs_Next
-
 @shift /1
 @goto :ParseArgs
 
@@ -350,7 +352,7 @@ echo [1AActivating the micromamba environment...[32m[1mDONE[0m.
 @REM |  Create a python virtual environment
 @REM |
 @REM ----------------------------------------------------------------------
-echo Creating a python virtual environment...
+echo Creating the python virtual environment...
 
 call :_CreateTempFileName
 
@@ -360,7 +362,7 @@ virtualenv %_CLEAR_FLAG% --no-periodic-update --no-vcs-ignore --verbose .\Genera
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
-    echo [1ACreating a python virtual environment...[31m[1mFAILED[0m.
+    echo [1ACreating the python virtual environment...[31m[1mFAILED[0m.
     echo.
 
     type "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
@@ -368,7 +370,7 @@ if %_ERRORLEVEL% NEQ 0 (
 )
 
 call :_DeleteTempFile
-echo [1ACreating a python virtual environment...[32m[1mDONE[0m.
+echo [1ACreating the python virtual environment...[32m[1mDONE[0m.
 
 @REM ----------------------------------------------------------------------
 @REM |

@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.6.0"
+echo "Script Version 0.6.1"
 echo ""
 
 # This script:
@@ -97,7 +97,7 @@ is_debug=0
 # |  Parse and Process is_debug
 # |
 # ----------------------------------------------------------------------
-arguments=()
+command_line_args=()
 
 while [[ $# -gt 0 ]]; do
     if [[ "$1" == "--python-version" ]]; then
@@ -110,7 +110,7 @@ while [[ $# -gt 0 ]]; do
             is_force=1
         fi
 
-        arguments+=("$1")
+        command_line_args+=("$1")
     fi
 
     shift
@@ -424,7 +424,7 @@ fi
 # |  Create a python virtual environment
 # |
 # ----------------------------------------------------------------------
-echo "Creating a python virtual environment..."
+echo "Creating the python virtual environment..."
 
 temp_output_name=$(mktemp BootstrapImpl.XXXXXX)
 
@@ -436,7 +436,7 @@ virtualenv ${clear_flag} --no-periodic-update --no-vcs-ignore --verbose "./Gener
 error=$?
 
 if [[ ${error} != 0 ]]; then
-    echo "[1ACreating a python virtual environment...[31m[1mFAILED[0m."
+    echo "[1ACreating the python virtual environment...[31m[1mFAILED[0m."
     echo ""
 
     cat "${temp_output_name}"
@@ -446,7 +446,7 @@ if [[ ${error} != 0 ]]; then
 fi
 
 rm "${temp_output_name}"
-echo "[1ACreating a python virtual environment...[32m[1mDONE[0m."
+echo "[1ACreating the python virtual environment...[32m[1mDONE[0m."
 
 # ----------------------------------------------------------------------
 # |
@@ -470,7 +470,7 @@ if [[ -f "BootstrapEpilog.sh" ]] || [[ -f "BootstrapEpilog.py" ]]; then
     fi
 
     if [[ -f "BootstrapEpilog.py" ]]; then
-        python BootstrapEpilog.py BootstrapEpilog_py.sh "${arguments[@]}"
+        python BootstrapEpilog.py BootstrapEpilog_py.sh "${command_line_args[@]}"
         error=$?
 
         if [[ ${error} != 0 ]]; then
