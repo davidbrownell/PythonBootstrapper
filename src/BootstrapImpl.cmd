@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.6.1
+@echo Script Version 0.7.0
 @echo.
 
 @REM This script:
@@ -439,6 +439,9 @@ echo.
 @REM ----------------------------------------------------------------------
 echo Creating Activate.cmd...
 
+@REM Get the current directory name to use as the title for the activated window
+for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
+
 (
     echo @REM This file is generated during the Bootstrap process and is specific to your environment.
     echo @REM IT SHOULD NOT be added to your source control system.
@@ -449,6 +452,7 @@ echo Creating Activate.cmd...
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_VERSION%
     echo call .\Generated\Windows\Python%PYTHON_VERSION%\Scripts\activate.bat
     echo.
+    echo title %_ID5de3d7098b27469cb03e46cd9eb3819e%
     echo set PROMPT=(Python%PYTHON_VERSION%^) $P$G
     echo.
     echo set _ERRORLEVEL=0
@@ -509,6 +513,8 @@ echo Creating Activate.cmd...
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
 ) > Activate.cmd
+
+set _ID5de3d7098b27469cb03e46cd9eb3819e=
 
 echo [1ACreating Activate.cmd...[32m[1mDONE[0m.
 

@@ -42,7 +42,7 @@ if os.name.lower() == "nt":
     _extension = ".cmd"
     _home_dir = os.environ["USERPROFILE"]
     _execute_prefix = ""
-    _script_version = "0.6.1"
+    _script_version = "0.7.0"
     _init_shell_output = ""
     _source = ""
     _subprocess_executable = None
