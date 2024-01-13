@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.7.0
+@echo Script Version 0.8.0
 @echo.
 
 @REM This script:
@@ -395,7 +395,7 @@ set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
     echo.
-    echo [31m[1mERROR: [0mBootstrapEpilog.cmd failed.
+    echo [31m[1mERROR:[0m BootstrapEpilog.cmd failed.
     goto :Exit
 )
 
@@ -407,7 +407,7 @@ python BootstrapEpilog.py BootstrapEpilog_py.cmd %_COMMAND_LINE_ARGS%
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
-    echo [31m[1mERROR: [0mBootstrapEpilog.py failed.
+    echo [31m[1mERROR:[0m BootstrapEpilog.py failed.
     if exist BootstrapEpilog_py.cmd del BootstrapEpilog_py.cmd
     goto :Exit
 )
@@ -422,7 +422,7 @@ del BootstrapEpilog_py.cmd
 
 if %_ERRORLEVEL% NEQ 0 (
     echo.
-    echo [31m[1mERROR: [0mExecuting the BootstrapEpilog.py output failed.
+    echo [31m[1mERROR:[0m Executing the BootstrapEpilog.py output failed.
     goto :Exit
 )
 
@@ -437,25 +437,39 @@ echo.
 @REM |  Create Activate.cmd and Deactivate.cmd
 @REM |
 @REM ----------------------------------------------------------------------
-echo Creating Activate.cmd...
+
+@REM Get the current directory name
+set _CURRENT_DIR=%CD%
 
 @REM Get the current directory name to use as the title for the activated window
-for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
+for %%I in (%_CURRENT_DIR%) do set _DIR_NAME=%%~nxI
+
+echo Creating Activate.cmd...
 
 (
     echo @REM This file is generated during the Bootstrap process and is specific to your environment.
     echo @REM IT SHOULD NOT be added to your source control system.
     echo @echo off
     echo.
+    echo set _ERRORLEVEL=0
+    echo.
+    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [] (
+    echo     if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%_CURRENT_DIR%] (
+    echo         echo.
+    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo.
+    echo         set _ERRORLEVEL=-1
+    echo         goto :Exit
+    echo     ^)
+    echo ^)
+    echo.
     echo pushd %cd%
     echo.
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_VERSION%
     echo call .\Generated\Windows\Python%PYTHON_VERSION%\Scripts\activate.bat
     echo.
-    echo title %_ID5de3d7098b27469cb03e46cd9eb3819e%
+    echo title %_DIR_NAME%
     echo set PROMPT=(Python%PYTHON_VERSION%^) $P$G
-    echo.
-    echo set _ERRORLEVEL=0
     echo.
     echo if exist "ActivateEpilog.cmd" goto :ActivateEpilog_Execute
     echo if exist "ActivateEpilog.py" goto :ActivateEpilog_Execute
@@ -470,7 +484,7 @@ for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
     echo     echo.
-    echo     echo [31m[1mERROR: [0mActivateEpilog.cmd failed.
+    echo     echo [31m[1mERROR:[0m ActivateEpilog.cmd failed.
     echo     goto :Exit
     echo ^)
     echo.
@@ -483,7 +497,7 @@ for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
-    echo     echo [31m[1mERROR: [0mActivateEpilog.py failed.
+    echo     echo [31m[1mERROR:[0m ActivateEpilog.py failed.
     echo     if exist ActivateEpilog_py.cmd del ActivateEpilog_py.cmd
     echo     goto :Exit
     echo ^)
@@ -498,7 +512,7 @@ for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
     echo     echo.
-    echo     echo [31m[1mERROR: [0mExecuting the ActivateEpilog.py output failed.
+    echo     echo [31m[1mERROR:[0m Executing the ActivateEpilog.py output failed.
     echo     goto :Exit
     echo ^)
     echo.
@@ -510,11 +524,11 @@ for %%I in (.) do set _ID5de3d7098b27469cb03e46cd9eb3819e=%%~nxI
     echo echo [61m[1m%CD%[0m has been [32m[1mactivated[0m.
     echo echo.
     echo.
+    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%_CURRENT_DIR%
+    echo.
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
 ) > Activate.cmd
-
-set _ID5de3d7098b27469cb03e46cd9eb3819e=
 
 echo [1ACreating Activate.cmd...[32m[1mDONE[0m.
 
@@ -526,6 +540,22 @@ echo Creating Deactivate.cmd...
     echo @echo off
     echo.
     echo set _ERRORLEVEL=0
+    echo.
+    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] EQU [] (
+    echo     echo.
+    echo     echo [31m[1mERROR:[0m The environment has not been activated.
+    echo.
+    echo     set _ERRORLEVEL=-1
+    echo     goto :Exit
+    echo ^)
+    echo.
+    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%_CURRENT_DIR%] (
+    echo     echo.
+    echo     echo [31m[1mERROR:[0m This environment was activated by "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo.
+    echo     set _ERRORLEVEL=-1
+    echo     goto :Exit
+    echo ^)
     echo.
     echo if exist "DeactivateEpilog.cmd" goto :DeactivateEpilog_Execute
     echo if exist "DeactivateEpilog.py" goto :DeactivateEpilog_Execute
@@ -540,7 +570,7 @@ echo Creating Deactivate.cmd...
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
     echo     echo.
-    echo     echo [31m[1mERROR: [0mDeactivateEpilog.cmd failed.
+    echo     echo [31m[1mERROR:[0m DeactivateEpilog.cmd failed.
     echo     goto :Exit
     echo ^)
     echo.
@@ -553,7 +583,7 @@ echo Creating Deactivate.cmd...
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
-    echo     echo [31m[1mERROR: [0mDeactivateEpilog.py failed.
+    echo     echo [31m[1mERROR:[0m DeactivateEpilog.py failed.
     echo     if exist DeactivateEpilog_py.cmd del DeactivateEpilog_py.cmd
     echo     goto :Exit
     echo ^)
@@ -568,7 +598,7 @@ echo Creating Deactivate.cmd...
     echo.
     echo if %%_ERRORLEVEL%% NEQ 0 (
     echo     echo.
-    echo     echo [31m[1mERROR: [0mExecuting the DeactivateEpilog.py output failed.
+    echo     echo [31m[1mERROR:[0m Executing the DeactivateEpilog.py output failed.
     echo     goto :Exit
     echo ^)
     echo.
@@ -585,11 +615,16 @@ echo Creating Deactivate.cmd...
     echo echo [61m[1m%CD%[0m has been [31m[1mdeactivated[0m.
     echo echo.
     echo.
+    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
+    echo.
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
 ) > Deactivate.cmd
 
 echo [1ACreating Deactivate.cmd...[32m[1mDONE[0m.
+
+set _DIR_NAME=
+set _CURRENT_DIR=
 
 @REM ----------------------------------------------------------------------
 @REM |

@@ -37,25 +37,27 @@ PYTHON_VERSIONS                             = [
     "3.8",
 ]
 
+
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
     _extension = ".cmd"
     _home_dir = os.environ["USERPROFILE"]
     _execute_prefix = ""
-    _script_version = "0.7.0"
+    _script_version = "0.8.0"
     _init_shell_output = ""
     _source = ""
     _subprocess_executable = None
+    _null_output = "NUL"
 
 else:
     _extension = ".sh"
     _home_dir = os.environ["HOME"]
     _execute_prefix = "./"
-    _script_version = "0.6.1"
+    _script_version = "0.8.0"
     _init_shell_output = "Initializing the micromamba shell...DONE.\n"
     _source = ". "
     _subprocess_executable = "/bin/bash"
-
+    _null_output = " /dev/null"
 
 assert _home_dir is not None
 micromamba_path = Path(_home_dir) / "micromamba"
@@ -659,27 +661,17 @@ class TestActivateEpilog(object):
         else:
             python_version_arg = ""
 
+        args = " ".join('"{}"'.format(arg) for arg in (arguments or []))
+
+        commands = [
+            f"{_execute_prefix}Bootstrap{_extension}{_bootstrap_branch_arg}{python_version_arg} >>{_null_output}",
+            f"{_source}{_execute_prefix}Activate{_extension} {args}",
+        ]
+
         result, output = _Execute(
             files_to_copy,
             root,
-            "{}Bootstrap{}{}{}".format(
-                _execute_prefix,
-                _extension,
-                _bootstrap_branch_arg,
-                python_version_arg,
-            ),
-        )
-        assert result == 0, output
-
-        result, output = _Execute(
-            [],
-            root,
-            "{}{}Activate{} {}".format(
-                _source,
-                _execute_prefix,
-                _extension,
-                " ".join('"{}"'.format(arg) for arg in (arguments or [])),
-            ),
+            " && ".join(commands),
         )
 
         assert result == expected_result, (result, output)
@@ -947,27 +939,18 @@ class TestDeactivateEpilog(object):
         else:
             python_version_arg = ""
 
+        args = " ".join('"{}"'.format(arg) for arg in (arguments or []))
+
+        commands = [
+            f"{_execute_prefix}Bootstrap{_extension}{_bootstrap_branch_arg}{python_version_arg} >>{_null_output}",
+            f"{_source}{_execute_prefix}Activate{_extension}",
+            f"{_source}{_execute_prefix}Deactivate{_extension} {args}",
+        ]
+
         result, output = _Execute(
             files_to_copy,
             root,
-            "{}Bootstrap{}{}{}".format(
-                _execute_prefix,
-                _extension,
-                _bootstrap_branch_arg,
-                python_version_arg,
-            ),
-        )
-        assert result == 0, output
-
-        result, output = _Execute(
-            [],
-            root,
-            "{source}{execute_prefix}Activate{extension} && {source}{execute_prefix}Deactivate{extension} {args}".format(
-                source=_source,
-                execute_prefix=_execute_prefix,
-                extension=_extension,
-                args=" ".join('"{}"'.format(arg) for arg in (arguments or [])),
-            ),
+            " && ".join(commands),
         )
 
         assert result == expected_result, (result, output)
@@ -1264,7 +1247,148 @@ class TestDeactivateEpilog(object):
 
 
 # ----------------------------------------------------------------------
+class TestErrors(object):
+    # ----------------------------------------------------------------------
+    @staticmethod
+    def Bootstrap(
+        root: Path,
+        templates_path: Path,
+    ) -> None:
+        result, output = _Execute(
+            [
+                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+            ],
+            root,
+            "{}Bootstrap{}{}".format(
+                _execute_prefix,
+                _extension,
+                _bootstrap_branch_arg,
+            ),
+        )
+        assert result == 0, output
+
+    # ----------------------------------------------------------------------
+    def test_DeactivateUnactivated(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Bootstrap(root, templates_path)
+
+        result, output = _Execute(
+            [],
+            root,
+            "{}{}Deactivate{}".format(
+                _source,
+                _execute_prefix,
+                _extension,
+            ),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            """\
+
+            ERROR: The environment has not been activated.
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_ActivateRightDir(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Bootstrap(root, templates_path)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{_extension}",
+            f"{_source}{_execute_prefix}Activate{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result == 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root} has been activated.
+
+
+            {root} has been activated.
+
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_ActivateWrongDir(self, tmp_path_factory, templates_path):
+        root1 = tmp_path_factory.mktemp("root1")
+        root2 = tmp_path_factory.mktemp("root2")
+
+        self.Bootstrap(root1, templates_path)
+        self.Bootstrap(root2, templates_path)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{_extension}",
+            f"cd {root2}",
+            f"{_source}{_execute_prefix}Activate{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root1,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root1} has been activated.
+
+
+            ERROR: This environment cannot be activated over "{root1}".
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_DeactivateWrongDir(self, tmp_path_factory, templates_path):
+        root1 = tmp_path_factory.mktemp("root1")
+        root2 = tmp_path_factory.mktemp("root2")
+
+        self.Bootstrap(root1, templates_path)
+        self.Bootstrap(root2, templates_path)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{_extension}",
+            f"cd {root2}",
+            f"{_source}{_execute_prefix}Deactivate{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root1,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root1} has been activated.
+
+
+            ERROR: This environment was activated by "{root1}".
+            """,
+        )
+
+
 # ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+_env = {k:v for k, v in os.environ.items() if not k.startswith("_")}
+
+
 # ----------------------------------------------------------------------
 def _Execute(
     files_to_copy: list[tuple[Path, Path]],
@@ -1285,6 +1409,7 @@ def _Execute(
         stderr=subprocess.STDOUT,
         cwd=root,
         executable=_subprocess_executable,
+        env=_env,
     )
 
     content = result.stdout.decode("utf-8")

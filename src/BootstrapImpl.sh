@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.6.1"
+echo "Script Version 0.8.0"
 echo ""
 
 # This script:
@@ -514,6 +514,13 @@ cat <<END_OF_CONTENT > Activate.sh
 # This file is generated during the Bootstrap process and is specific to your environment.
 # IT SHOULD NOT be added to your source control system.
 
+if [[ ! -z \${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR} ]] && [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}" != "${this_dir}" ]]; then
+    echo ""
+    echo "[31m[1mERROR:[0m This environment cannot be activated over \"\${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}\"."
+
+    exit 1
+fi
+
 # Ensure that the script is being invoked via source (as it modifies the current environment)
 if [[ \${0##*/} == Activate.sh ]]
 then
@@ -545,7 +552,7 @@ micromamba activate "Python${PYTHON_VERSION}" || exit
 source "./Generated/${PLATFORM}/Python${PYTHON_VERSION}/bin/activate" || exit
 
 # Set the prompt
-if [[ -z \${PYTHON_ENVIRONMENT_IS_ACTIVATED} ]]; then
+if [[ -z \${_PYTHON_ENVIRONMENT_IS_ACTIVATED} ]]; then
     # If here, the variable is not set
     PS1="(Python${PYTHON_VERSION}) \${original_prompt}"
 else
@@ -593,7 +600,8 @@ echo ""
 echo "[61m[1m${this_dir}[0m has been [32m[1mactivated[0m."
 echo ""
 
-export PYTHON_ENVIRONMENT_IS_ACTIVATED=1
+export _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR="${this_dir}"
+export _PYTHON_ENVIRONMENT_IS_ACTIVATED=1
 END_OF_CONTENT
 
 chmod u+x Activate.sh
@@ -606,6 +614,20 @@ cat <<END_OF_CONTENT > Deactivate.sh
 
 # This file is generated during the Bootstrap process and is specific to your environment.
 # IT SHOULD NOT be added to your source control system.
+
+if [[ -z \${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR} ]]; then
+    echo ""
+    echo "[31m[1mERROR:[0m The environment has not been activated."
+
+    exit 1
+fi
+
+if [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}" != "${this_dir}" ]]; then
+    echo ""
+    echo "[31m[1mERROR:[0m This environment was activated by \"\${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}\"."
+
+    exit 1
+fi
 
 # Ensure that the script is being invoked via source (as it modifies the current environment)
 if [[ \${0##*/} == Deactivate.sh ]]
@@ -673,7 +695,8 @@ echo ""
 echo "[61m[1m${this_dir}[0m has been [31m[1mdeactivated[0m."
 echo ""
 
-unset PYTHON_ENVIRONMENT_IS_ACTIVATED
+unset _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR
+unset _PYTHON_ENVIRONMENT_IS_ACTIVATED
 END_OF_CONTENT
 
 chmod u+x Deactivate.sh
