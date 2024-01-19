@@ -13,6 +13,17 @@
 # |  http://www.boost.org/LICENSE_1_0.txt.
 # |
 # ----------------------------------------------------------------------
-import os
+import subprocess
 
-os.system("pip install -r requirements.txt")
+from pathlib import Path
+
+result = subprocess.run(
+    "pip install -r requirements.txt",
+    check=False,
+    cwd=Path(__file__).parent,
+    shell=True,
+    stderr=subprocess.STDOUT,
+    stdout=subprocess.PIPE,
+)
+
+assert result.returncode == 0, result.stdout.decode("utf-8")

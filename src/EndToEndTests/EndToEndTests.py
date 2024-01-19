@@ -27,9 +27,9 @@ from typing import Callable, Optional
 import pytest
 
 # ----------------------------------------------------------------------
-INVALID_COMMAND                             = "this is an invalid command"
-PYTHON_VERSIONS                             = [
-    None, # Use default version
+INVALID_COMMAND = "this is an invalid command"
+PYTHON_VERSIONS = [
+    None,  # Use default version
     "3.12",
     "3.11",
     "3.10",
@@ -85,10 +85,10 @@ class TestBootstrapEpilog(object):
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
-        expected_result: int=0,
-        arguments: Optional[list[str]]=None,
+        expected_result: int = 0,
+        arguments: Optional[list[str]] = None,
         *,
-        python_version: Optional[str]=None,
+        python_version: Optional[str] = None,
     ) -> None:
         if arguments is None:
             arguments = []
@@ -117,20 +117,25 @@ class TestBootstrapEpilog(object):
         elif isinstance(expected_output, str):
             assert output == expected_output, output
         else:
-            assert False # pragma: no cover
+            assert False  # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path, python_version):
         root = tmp_path_factory.mktemp("root")
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -185,14 +190,22 @@ class TestBootstrapEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"BootstrapEpilog{_extension}", root / f"BootstrapEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"BootstrapEpilog{_extension}",
+                    root / f"BootstrapEpilog{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -249,13 +262,18 @@ class TestBootstrapEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "BootstrapEpilog.py", root / "BootstrapEpilog.py"),
             ],
             root,
@@ -316,14 +334,22 @@ class TestBootstrapEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"BootstrapEpilog{_extension}", root / f"BootstrapEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"BootstrapEpilog{_extension}",
+                    root / f"BootstrapEpilog{_extension}",
+                ),
                 (templates_path / "BootstrapEpilog.py", root / "BootstrapEpilog.py"),
             ],
             root,
@@ -385,13 +411,18 @@ class TestBootstrapEpilog(object):
         root = tmp_path_factory.mktemp("root")
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "BootstrapEpilog.py", root / "BootstrapEpilog.py"),
             ],
             root,
@@ -468,7 +499,9 @@ class TestBootstrapEpilog(object):
         script_filename.chmod(0o755)
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
@@ -514,7 +547,10 @@ class TestBootstrapEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -537,13 +573,18 @@ class TestBootstrapEpilog(object):
             )
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -592,7 +633,9 @@ class TestBootstrapEpilog(object):
             )
 
         if python_version is None:
-            downloading_default_python_version = "Downloading default python version information...DONE.\n"
+            downloading_default_python_version = (
+                "Downloading default python version information...DONE.\n"
+            )
         else:
             downloading_default_python_version = ""
 
@@ -634,7 +677,10 @@ class TestBootstrapEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -652,9 +698,9 @@ class TestActivateEpilog(object):
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
-        expected_result: int=0,
-        arguments: Optional[list[str]]=None,
-        python_version: Optional[str]=None,
+        expected_result: int = 0,
+        arguments: Optional[list[str]] = None,
+        python_version: Optional[str] = None,
     ) -> None:
         if python_version is not None:
             python_version_arg = " --python-version {}".format(python_version)
@@ -681,7 +727,7 @@ class TestActivateEpilog(object):
         elif isinstance(expected_output, str):
             assert output == expected_output, output
         else:
-            assert False # pragma: no cover
+            assert False  # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path, python_version):
@@ -689,7 +735,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -708,8 +757,14 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"ActivateEpilog{_extension}", root / f"ActivateEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"ActivateEpilog{_extension}",
+                    root / f"ActivateEpilog{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -732,7 +787,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "ActivateEpilog.py", root / "ActivateEpilog.py"),
             ],
             root,
@@ -759,8 +817,14 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"ActivateEpilog{_extension}", root / f"ActivateEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"ActivateEpilog{_extension}",
+                    root / f"ActivateEpilog{_extension}",
+                ),
                 (templates_path / "ActivateEpilog.py", root / "ActivateEpilog.py"),
             ],
             root,
@@ -788,7 +852,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "ActivateEpilog.py", root / "ActivateEpilog.py"),
             ],
             root,
@@ -845,7 +912,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -869,7 +939,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -912,7 +985,10 @@ class TestActivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -930,9 +1006,9 @@ class TestDeactivateEpilog(object):
         files_to_copy: list[tuple[Path, Path]],
         root: Path,
         expected_output: str | Callable[[str], bool],
-        expected_result: int=0,
-        arguments: Optional[list[str]]=None,
-        python_version: Optional[str]=None,
+        expected_result: int = 0,
+        arguments: Optional[list[str]] = None,
+        python_version: Optional[str] = None,
     ) -> None:
         if python_version is not None:
             python_version_arg = " --python-version {}".format(python_version)
@@ -960,7 +1036,7 @@ class TestDeactivateEpilog(object):
         elif isinstance(expected_output, str):
             assert output == expected_output, output
         else:
-            assert False # pragma: no cover
+            assert False  # pragma: no cover
 
     # ----------------------------------------------------------------------
     def test_Empty(self, tmp_path_factory, templates_path, python_version):
@@ -968,7 +1044,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -990,8 +1069,14 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"DeactivateEpilog{_extension}", root / f"DeactivateEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"DeactivateEpilog{_extension}",
+                    root / f"DeactivateEpilog{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -1017,7 +1102,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "DeactivateEpilog.py", root / "DeactivateEpilog.py"),
             ],
             root,
@@ -1047,8 +1135,14 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
-                (templates_path / f"DeactivateEpilog{_extension}", root / f"DeactivateEpilog{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
+                (
+                    templates_path / f"DeactivateEpilog{_extension}",
+                    root / f"DeactivateEpilog{_extension}",
+                ),
                 (templates_path / "DeactivateEpilog.py", root / "DeactivateEpilog.py"),
             ],
             root,
@@ -1079,7 +1173,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
                 (templates_path / "DeactivateEpilog.py", root / "DeactivateEpilog.py"),
             ],
             root,
@@ -1152,7 +1249,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -1176,7 +1276,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             textwrap.dedent(
@@ -1237,7 +1340,10 @@ class TestDeactivateEpilog(object):
 
         self.Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             IsValid,
@@ -1256,7 +1362,10 @@ class TestErrors(object):
     ) -> None:
         result, output = _Execute(
             [
-                (templates_path / f"Bootstrap{_extension}", root / f"Bootstrap{_extension}"),
+                (
+                    templates_path / f"Bootstrap{_extension}",
+                    root / f"Bootstrap{_extension}",
+                ),
             ],
             root,
             "{}Bootstrap{}{}".format(
@@ -1386,7 +1495,7 @@ class TestErrors(object):
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
-_env = {k:v for k, v in os.environ.items() if not k.startswith("_")}
+_env = {k: v for k, v in os.environ.items() if not k.startswith("_")}
 
 
 # ----------------------------------------------------------------------
