@@ -46,37 +46,44 @@ runs:
   steps:
     - name: Bootstrap 3.8
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.8
 
     - name: Bootstrap 3.9
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.9
 
     - name: Bootstrap 3.10
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.10
 
     - name: Bootstrap 3.11
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.11
 
     - name: Bootstrap 3.12
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.12
 
+    - name: Black
+      shell: ${{ inputs.shell_name }}
+      run: |
+        cd src/EndToEndTests
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        black --check ../..
+
     - name: EndToEndTests
       shell: ${{ inputs.shell_name }}
-      run: |-
+      run: |
         cd src/EndToEndTests
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         pytest EndToEndTests.py --verbose -vv --capture=no
