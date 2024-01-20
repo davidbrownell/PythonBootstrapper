@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.8.0"
+echo "Script Version 0.9.0"
 echo ""
 
 # This script:
@@ -508,7 +508,7 @@ echo "Creating Activate.sh..."
 
 this_dir=$(pwd)
 
-cat <<END_OF_CONTENT > Activate.sh
+cat <<END_OF_CONTENT > Activate${PYTHON_VERSION}.sh
 #!/usr/bin/env bash
 
 # This file is generated during the Bootstrap process and is specific to your environment.
@@ -521,8 +521,15 @@ if [[ ! -z \${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR} ]] && [[ "\${_PYTHON_BOOTSTRA
     exit 1
 fi
 
+if [[ ! -z \${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION} ]] && [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}" != "${PYTHON_VERSION}" ]]; then
+    echo ""
+    echo "[31m[1mERROR:[0m This environment cannot be activated over \"\${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}\"."
+
+    exit 1
+fi
+
 # Ensure that the script is being invoked via source (as it modifies the current environment)
-if [[ \${0##*/} == Activate.sh ]]
+if [[ \${0##*/} == Activate${PYTHON_VERSION}.sh ]] || [[ \${0##*/} == Activate.sh ]]
 then
     echo ""
     echo "[31m[1mERROR:[0m This script activates a terminal for development according to information specific to the repository."
@@ -530,11 +537,11 @@ then
     echo "[31m[1mERROR:[0m Because this process makes changes to environment variables, it must be run within the current context."
     echo "[31m[1mERROR:[0m To do this, please source (run) the script as follows:"
     echo "[31m[1mERROR:[0m"
-    echo "[31m[1mERROR:[0m     source ./Activate.sh"
+    echo "[31m[1mERROR:[0m     source ./\${0##*/}"
     echo "[31m[1mERROR:[0m"
     echo "[31m[1mERROR:[0m         - or -"
     echo "[31m[1mERROR:[0m"
-    echo "[31m[1mERROR:[0m     . ./Activate.sh"
+    echo "[31m[1mERROR:[0m     . ./\${0##*/}"
     echo "[31m[1mERROR:[0m"
     echo ""
 
@@ -601,15 +608,20 @@ echo "[61m[1m${this_dir}[0m has been [32m[1mactivated[0m."
 echo ""
 
 export _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR="${this_dir}"
+export _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION="${PYTHON_VERSION}"
 export _PYTHON_ENVIRONMENT_IS_ACTIVATED=1
 END_OF_CONTENT
 
-chmod u+x Activate.sh
+chmod u+x Activate${PYTHON_VERSION}.sh
+
+! [[ -f "Activate.sh" ]] || rm "Activate.sh"
+ln Activate${PYTHON_VERSION}.sh Activate.sh
+
 echo "[1ACreating Activate.sh...[32m[1mDONE[0m."
 
 echo "Creating Deactivate.sh..."
 
-cat <<END_OF_CONTENT > Deactivate.sh
+cat <<END_OF_CONTENT > Deactivate${PYTHON_VERSION}.sh
 #!/usr/bin/env bash
 
 # This file is generated during the Bootstrap process and is specific to your environment.
@@ -629,8 +641,15 @@ if [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}" != "${this_dir}" ]]; then
     exit 1
 fi
 
+if [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}" != "${PYTHON_VERSION}" ]]; then
+    echo ""
+    echo "[31m[1mERROR:[0m This environment was activated with \"\${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}\"."
+
+    exit 1
+fi
+
 # Ensure that the script is being invoked via source (as it modifies the current environment)
-if [[ \${0##*/} == Deactivate.sh ]]
+if [[ \${0##*/} == Deactivate${PYTHON_VERSION}.sh ]] || [[ \${0##*/} == Deactivate.sh ]]
 then
     echo ""
     echo "[31m[1mERROR:[0m This script activates a terminal for development according to information specific to the repository."
@@ -638,11 +657,11 @@ then
     echo "[31m[1mERROR:[0m Because this process makes changes to environment variables, it must be run within the current context."
     echo "[31m[1mERROR:[0m To do this, please source (run) the script as follows:"
     echo "[31m[1mERROR:[0m"
-    echo "[31m[1mERROR:[0m     source ./Deactivate.sh"
+    echo "[31m[1mERROR:[0m     source ./\${0##*/}"
     echo "[31m[1mERROR:[0m"
     echo "[31m[1mERROR:[0m         - or -"
     echo "[31m[1mERROR:[0m"
-    echo "[31m[1mERROR:[0m     . ./Deactivate.sh"
+    echo "[31m[1mERROR:[0m     . ./\${0##*/}"
     echo "[31m[1mERROR:[0m"
     echo ""
 
@@ -696,10 +715,15 @@ echo "[61m[1m${this_dir}[0m has been [31m[1mdeactivated[0m."
 echo ""
 
 unset _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR
+unset _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION
 unset _PYTHON_ENVIRONMENT_IS_ACTIVATED
 END_OF_CONTENT
 
-chmod u+x Deactivate.sh
+chmod u+x Deactivate${PYTHON_VERSION}.sh
+
+! [[ -f "Deactivate.sh" ]] || rm "Deactivate.sh"
+ln Deactivate${PYTHON_VERSION}.sh Deactivate.sh
+
 echo "[1ACreating Deactivate.sh...[32m[1mDONE[0m."
 
 # ----------------------------------------------------------------------

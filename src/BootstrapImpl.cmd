@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.8.0
+@echo Script Version 0.9.0
 @echo.
 
 @REM This script:
@@ -453,10 +453,20 @@ echo Creating Activate.cmd...
     echo.
     echo set _ERRORLEVEL=0
     echo.
-    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [] (
-    echo     if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%_CURRENT_DIR%] (
+    echo if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "" (
+    echo     if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "%_CURRENT_DIR%" (
     echo         echo.
     echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo.
+    echo         set _ERRORLEVEL=-1
+    echo         goto :Exit
+    echo     ^)
+    echo ^)
+    echo.
+    echo if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "" (
+    echo     if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "%PYTHON_VERSION%" (
+    echo         echo.
+    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
     echo.
     echo         set _ERRORLEVEL=-1
     echo         goto :Exit
@@ -525,10 +535,14 @@ echo Creating Activate.cmd...
     echo echo.
     echo.
     echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%_CURRENT_DIR%
+    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=%PYTHON_VERSION%
     echo.
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
-) > Activate.cmd
+) > Activate%PYTHON_VERSION%.cmd
+
+if exist Activate.cmd del Activate.cmd >NUL
+mklink Activate.cmd Activate%PYTHON_VERSION%.cmd >NUL
 
 echo [1ACreating Activate.cmd...[32m[1mDONE[0m.
 
@@ -552,6 +566,14 @@ echo Creating Deactivate.cmd...
     echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%_CURRENT_DIR%] (
     echo     echo.
     echo     echo [31m[1mERROR:[0m This environment was activated by "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo.
+    echo     set _ERRORLEVEL=-1
+    echo     goto :Exit
+    echo ^)
+    echo.
+    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%] NEQ [%PYTHON_VERSION%] (
+    echo     echo.
+    echo     echo [31m[1mERROR:[0m This environment was activated with "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
     echo.
     echo     set _ERRORLEVEL=-1
     echo     goto :Exit
@@ -616,10 +638,14 @@ echo Creating Deactivate.cmd...
     echo echo.
     echo.
     echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
+    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
     echo.
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
-) > Deactivate.cmd
+) > Deactivate%PYTHON_VERSION%.cmd
+
+if exist Deactivate.cmd del Deactivate.cmd >NUL
+mklink Deactivate.cmd Deactivate%PYTHON_VERSION%.cmd >NUL
 
 echo [1ACreating Deactivate.cmd...[32m[1mDONE[0m.
 

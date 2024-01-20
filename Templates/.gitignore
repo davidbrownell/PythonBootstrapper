@@ -1,6 +1,6 @@
-Activate.cmd
-Activate.sh
-Deactivate.cmd
-Deactivate.sh
+Activate*.cmd
+Activate*.sh
+Deactivate*.cmd
+Deactivate*.sh
 
 Generated/**
