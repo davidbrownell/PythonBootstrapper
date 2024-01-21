@@ -17,7 +17,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.9.0"
+echo "Script Version 0.10.0"
 echo ""
 
 # This script:
@@ -33,9 +33,10 @@ echo ""
 #        e) Deactivate the environment
 #     6) Initialize the micromamba shell
 #     7) Activate the environment
-#     8) Create a python virtual environment
-#     9) Invoke custom functionality (if necessary)
-#     10) Create Activate.cmd and Deactivate.cmd
+#     8) Remove the python virtual environment (if necessary)
+#     9) Create the python virtual environment
+#     10) Invoke custom functionality (if necessary)
+#     11) Create Activate.cmd and Deactivate.cmd
 
 # ----------------------------------------------------------------------
 # |
@@ -421,18 +422,35 @@ fi
 
 # ----------------------------------------------------------------------
 # |
-# |  Create a python virtual environment
+# |  Remove the python virtual environment (if necessary)
+# |
+# ----------------------------------------------------------------------
+if [[ -d "./Generated/${PLATFORM}/Python${PYTHON_VERSION}" ]]; then
+    echo "Removing the existing python virtual environment..."
+
+    rm -rf "./Generated/${PLATFORM}/Python${PYTHON_VERSION}"
+    error=$?
+
+    if [[ ${error} != 0 ]]; then
+        echo "[1ARemoving the existing python virtual environment...[31m[1mFAILED[0m."
+        echo ""
+
+        exit ${error}
+    fi
+
+    echo "[1ARemoving the existing python virtual environment...[32m[1mDONE[0m."
+fi
+
+# ----------------------------------------------------------------------
+# |
+# |  Create the python virtual environment
 # |
 # ----------------------------------------------------------------------
 echo "Creating the python virtual environment..."
 
 temp_output_name=$(mktemp BootstrapImpl.XXXXXX)
 
-if [[ ${is_force} == 1 ]]; then
-    clear_flag="--clear"
-fi
-
-virtualenv ${clear_flag} --no-periodic-update --no-vcs-ignore --verbose "./Generated/${PLATFORM}/Python${PYTHON_VERSION}" > "${temp_output_name}" 2>&1
+virtualenv --no-periodic-update --no-vcs-ignore --verbose "./Generated/${PLATFORM}/Python${PYTHON_VERSION}" > "${temp_output_name}" 2>&1
 error=$?
 
 if [[ ${error} != 0 ]]; then

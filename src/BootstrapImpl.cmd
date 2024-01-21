@@ -16,7 +16,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.9.0
+@echo Script Version 0.10.0
 @echo.
 
 @REM This script:
@@ -30,9 +30,10 @@
 @REM        c) Install virtualenv
 @REM        d) Deactivate the environment
 @REM     6) Activate the environment
-@REM     7) Create the python virtual environment
-@REM     8) Invoke custom functionality (if necessary)
-@REM     9) Create Activate.cmd and Deactivate.cmd
+@REM     7) Remove the python virtual environment (if necessary)
+@REM     8) Create the python virtual environment
+@REM     9) Invoke custom functionality (if necessary)
+@REM     10) Create Activate.cmd and Deactivate.cmd
 
 @set _DELETE_ENVIRONMENT_ON_ERROR=0
 @set _IS_FORCE=0
@@ -165,7 +166,7 @@ echo Removing the Python%PYTHON_VERSION% micromamba environment...
 call :_CreateTempFileName
 
 REM rmdir doesn't set ERRORLEVEL properly on failure, so we need to look at the size of the output
-REM To determin if failures have occurred.
+REM To determine if failures have occurred.
 rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
@@ -349,16 +350,45 @@ echo [1AActivating the micromamba environment...[32m[1mDONE[0m.
 
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Create a python virtual environment
+@REM |  Remove the python virtual environment (if necessary)
+@REM |
+@REM ----------------------------------------------------------------------
+if not exist .\Generated\Windows\Python%PYTHON_VERSION% goto :RemoveVirtualEnv_End
+
+echo Removing the existing python virtual environment...
+
+call :_CreateTempFileName
+
+REM rmdir doesn't set ERRORLEVEL properly on failure, so we need to look at the size of the output
+REM To determine if failures have occurred.
+rmdir /S /Q .\Generated\Windows\Python%PYTHON_VERSION% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+set _ERRORLEVEL=%ERRORLEVEL%
+
+set _OUTPUT_SIZE=0
+for /f %%i in ("%_BOOTSTRAP_IMPL_TEMP_FILENAME%") do set _OUTPUT_SIZE=%%~zi
+if %_OUTPUT_SIZE% NEQ 0 (
+    echo [1ARemoving the existing python virtual environment...[31m[1mFAILED[0m.
+    echo.
+
+    type "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
+    goto :Exit
+)
+
+del "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
+echo [1ARemoving the existing python virtual environment...[32m[1mDONE[0m.
+
+:RemoveVirtualEnv_End
+
+@REM ----------------------------------------------------------------------
+@REM |
+@REM |  Create the python virtual environment
 @REM |
 @REM ----------------------------------------------------------------------
 echo Creating the python virtual environment...
 
 call :_CreateTempFileName
 
-if %_IS_FORCE% EQU 1 set _CLEAR_FLAG="--clear"
-
-virtualenv %_CLEAR_FLAG% --no-periodic-update --no-vcs-ignore --verbose .\Generated\Windows\Python%PYTHON_VERSION% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
+virtualenv --no-periodic-update --no-vcs-ignore --verbose .\Generated\Windows\Python%PYTHON_VERSION% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (

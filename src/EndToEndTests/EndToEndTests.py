@@ -40,12 +40,13 @@ PYTHON_VERSIONS = [
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
+    _script_version = "0.10.0"
+
     _is_windows = True
 
     _extension = ".cmd"
     _home_dir = os.environ["USERPROFILE"]
     _execute_prefix = ""
-    _script_version = "0.9.0"
     _init_shell_output = ""
     _source = ""
     _subprocess_executable = None
@@ -54,12 +55,13 @@ if os.name.lower() == "nt":
     generate_set_command_func = lambda var, value: "set {}={}".format(var, value)
 
 else:
+    _script_version = "0.10.0"
+
     _is_windows = False
 
     _extension = ".sh"
     _home_dir = os.environ["HOME"]
     _execute_prefix = "./"
-    _script_version = "0.9.0"
     _init_shell_output = "Initializing the micromamba shell...DONE.\n"
     _source = ". "
     _subprocess_executable = "/bin/bash"
