@@ -40,24 +40,32 @@ PYTHON_VERSIONS = [
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
+    _is_windows = True
+
     _extension = ".cmd"
     _home_dir = os.environ["USERPROFILE"]
     _execute_prefix = ""
-    _script_version = "0.8.0"
+    _script_version = "0.9.0"
     _init_shell_output = ""
     _source = ""
     _subprocess_executable = None
     _null_output = "NUL"
 
+    generate_set_command_func = lambda var, value: "set {}={}".format(var, value)
+
 else:
+    _is_windows = False
+
     _extension = ".sh"
     _home_dir = os.environ["HOME"]
     _execute_prefix = "./"
-    _script_version = "0.8.0"
+    _script_version = "0.9.0"
     _init_shell_output = "Initializing the micromamba shell...DONE.\n"
     _source = ". "
     _subprocess_executable = "/bin/bash"
     _null_output = " /dev/null"
+
+    generate_set_command_func = lambda var, value: "export {}={}".format(var, value)
 
 assert _home_dir is not None
 micromamba_path = Path(_home_dir) / "micromamba"
@@ -1359,6 +1367,7 @@ class TestErrors(object):
     def Bootstrap(
         root: Path,
         templates_path: Path,
+        python_version: Optional[str] = None,
     ) -> None:
         result, output = _Execute(
             [
@@ -1368,12 +1377,14 @@ class TestErrors(object):
                 ),
             ],
             root,
-            "{}Bootstrap{}{}".format(
+            "{}Bootstrap{}{}{}".format(
                 _execute_prefix,
                 _extension,
                 _bootstrap_branch_arg,
+                "" if python_version is None else " --python-version {}".format(python_version),
             ),
         )
+
         assert result == 0, output
 
     # ----------------------------------------------------------------------
@@ -1488,6 +1499,230 @@ class TestErrors(object):
 
 
             ERROR: This environment was activated by "{root1}".
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_ActivateWrongPythonVersion(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        assert PYTHON_VERSIONS[0] is None
+        version1 = PYTHON_VERSIONS[1]
+        version2 = PYTHON_VERSIONS[2]
+
+        self.Bootstrap(root, templates_path, python_version=version1)
+        self.Bootstrap(root, templates_path, python_version=version2)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{version1}{_extension}",
+            f"{_source}{_execute_prefix}Activate{version2}{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root} has been activated.
+
+
+            ERROR: This environment cannot be activated over "{version1}".
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    def test_DeactivateWrongPythonVersion(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        assert PYTHON_VERSIONS[0] is None
+        version1 = PYTHON_VERSIONS[1]
+        version2 = PYTHON_VERSIONS[2]
+
+        self.Bootstrap(root, templates_path, python_version=version1)
+        self.Bootstrap(root, templates_path, python_version=version2)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{version1}{_extension}",
+            f"{_source}{_execute_prefix}Deactivate{version2}{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root} has been activated.
+
+
+            ERROR: This environment was activated with "3.12".
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    @pytest.mark.skipif(_is_windows, reason="Windows does not require sourcing")
+    def test_UnsourcedActivate(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Bootstrap(root, templates_path)
+
+        commands = [
+            f"{_execute_prefix}Activate{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            ERROR: This script activates a terminal for development according to information specific to the repository.
+            ERROR:
+            ERROR: Because this process makes changes to environment variables, it must be run within the current context.
+            ERROR: To do this, please source (run) the script as follows:
+            ERROR:
+            ERROR:     source ./Activate.sh
+            ERROR:
+            ERROR:         - or -
+            ERROR:
+            ERROR:     . ./Activate.sh
+            ERROR:
+
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    @pytest.mark.skipif(_is_windows, reason="Windows does not require sourcing")
+    def test_UnsourcedActivateWithVersion(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        assert PYTHON_VERSIONS[0] is None
+        python_version = PYTHON_VERSIONS[1]
+
+        self.Bootstrap(root, templates_path, python_version)
+
+        commands = [
+            f"{_execute_prefix}Activate{python_version}{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            ERROR: This script activates a terminal for development according to information specific to the repository.
+            ERROR:
+            ERROR: Because this process makes changes to environment variables, it must be run within the current context.
+            ERROR: To do this, please source (run) the script as follows:
+            ERROR:
+            ERROR:     source ./Activate{python_version}.sh
+            ERROR:
+            ERROR:         - or -
+            ERROR:
+            ERROR:     . ./Activate{python_version}.sh
+            ERROR:
+
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    @pytest.mark.skipif(_is_windows, reason="Windows does not require sourcing")
+    def test_UnsourcedDeactivate(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        self.Bootstrap(root, templates_path)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{_extension}",
+            f"{_execute_prefix}Deactivate{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root} has been activated.
+
+
+            ERROR: This script activates a terminal for development according to information specific to the repository.
+            ERROR:
+            ERROR: Because this process makes changes to environment variables, it must be run within the current context.
+            ERROR: To do this, please source (run) the script as follows:
+            ERROR:
+            ERROR:     source ./Deactivate.sh
+            ERROR:
+            ERROR:         - or -
+            ERROR:
+            ERROR:     . ./Deactivate.sh
+            ERROR:
+
+            """,
+        )
+
+    # ----------------------------------------------------------------------
+    @pytest.mark.skipif(_is_windows, reason="Windows does not require sourcing")
+    def test_UnsourcedDeactivateWithVersion(self, tmp_path_factory, templates_path):
+        root = tmp_path_factory.mktemp("root")
+
+        assert PYTHON_VERSIONS[0] is None
+        python_version = PYTHON_VERSIONS[1]
+
+        self.Bootstrap(root, templates_path, python_version)
+
+        commands = [
+            f"{_source}{_execute_prefix}Activate{python_version}{_extension}",
+            f"{_execute_prefix}Deactivate{python_version}{_extension}",
+        ]
+
+        result, output = _Execute(
+            [],
+            root,
+            " && ".join(commands),
+        )
+
+        assert result != 0
+        assert output == textwrap.dedent(
+            f"""\
+
+            {root} has been activated.
+
+
+            ERROR: This script activates a terminal for development according to information specific to the repository.
+            ERROR:
+            ERROR: Because this process makes changes to environment variables, it must be run within the current context.
+            ERROR: To do this, please source (run) the script as follows:
+            ERROR:
+            ERROR:     source ./Deactivate{python_version}.sh
+            ERROR:
+            ERROR:         - or -
+            ERROR:
+            ERROR:     . ./Deactivate{python_version}.sh
+            ERROR:
+
             """,
         )
 

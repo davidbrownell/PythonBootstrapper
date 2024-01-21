@@ -53,7 +53,7 @@ jobs:
       # Ensure that windows machines support long paths
       - name: git Long File Path Support on Windows
         if: ${{ startsWith(matrix.os, 'windows') }}
-        run: |-
+        run: |
           git config --system core.longpaths true
 
       - name: "Checkout Source"
