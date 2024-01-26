@@ -28,14 +28,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ----------------------------------------------------------------------
   action_contexts:
     name: "Display GitHub Action Contexts"
-    uses: ./.github/workflows/callable_action_contexts.yaml
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_action_contexts.yaml@main
 
+  # ----------------------------------------------------------------------
   build_and_test:
     name: "Build and Test"
 
     strategy:
+      fail-fast: false
+
       matrix:
         os:
           - macos-latest
@@ -63,7 +67,7 @@ jobs:
 
       - name: "Initialize"
         id: initialize
-        uses: ./.github/actions/initialize
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
         with:
           operating_system: ${{ matrix.os }}
 
