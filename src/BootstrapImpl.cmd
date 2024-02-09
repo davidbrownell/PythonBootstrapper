@@ -7,10 +7,8 @@
 @REM |
 @REM ----------------------------------------------------------------------
 @REM |
-@REM |  Copyright David Brownell 2023
-@REM |  Distributed under the Boost Software License, Version 1.0. See
-@REM |  accompanying file LICENSE_1_0.txt or copy at
-@REM |  http://www.boost.org/LICENSE_1_0.txt.
+@REM |  Copyright David Brownell 2024
+@REM |  Distributed under the MIT License.
 @REM |
 @REM ----------------------------------------------------------------------
 @setlocal EnableDelayedExpansion
