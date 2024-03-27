@@ -15,7 +15,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.10.0"
+echo "Script Version 0.11.0"
 echo ""
 
 # This script:
@@ -545,7 +545,12 @@ if [[ ! -z \${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION} ]] && [[ "\${_PYTHON_BOOT
 fi
 
 # Ensure that the script is being invoked via source (as it modifies the current environment)
-if [[ \${0##*/} == Activate${PYTHON_VERSION}.sh ]] || [[ \${0##*/} == Activate.sh ]]
+script_name=\${ZSH_ARGZERO}
+if [[ -z \${script_name} ]]; then
+    script_name=\${0##*/}
+fi
+
+if [[ \${script_name} == Activate${PYTHON_VERSION}.sh ]] || [[ \${script_name} == Activate.sh ]]
 then
     echo ""
     echo "[31m[1mERROR:[0m This script activates a terminal for development according to information specific to the repository."
@@ -665,7 +670,12 @@ if [[ "\${_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}" != "${PYTHON_VERSION}" ]]; t
 fi
 
 # Ensure that the script is being invoked via source (as it modifies the current environment)
-if [[ \${0##*/} == Deactivate${PYTHON_VERSION}.sh ]] || [[ \${0##*/} == Deactivate.sh ]]
+script_name=\${ZSH_ARGZERO}
+if [[ -z \${script_name} ]]; then
+    script_name=\${0##*/}
+fi
+
+if [[ \${script_name} == Deactivate${PYTHON_VERSION}.sh ]] || [[ \${script_name} == Deactivate.sh ]]
 then
     echo ""
     echo "[31m[1mERROR:[0m This script activates a terminal for development according to information specific to the repository."
