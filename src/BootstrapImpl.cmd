@@ -14,24 +14,25 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.10.0
+@echo Script Version 0.11.0
 @echo.
 
 @REM This script:
 @REM     1) Ensure that PYTHON_VERSION is set
 @REM     2) Ensure that PYTHON_VERSION is valid
-@REM     3) Delete micromamba environment (if requested)
-@REM     4) Download micromamba (if necessary)
-@REM     5) Initialize a new environment (if necessary)
+@REM     3) Set global environment variables
+@REM     4) Delete micromamba environment (if requested)
+@REM     5) Download micromamba (if necessary)
+@REM     6) Initialize a new environment (if necessary)
 @REM        a) Create the micromamba environment
 @REM        b) Activate the environment
 @REM        c) Install virtualenv
 @REM        d) Deactivate the environment
-@REM     6) Activate the environment
-@REM     7) Remove the python virtual environment (if necessary)
-@REM     8) Create the python virtual environment
-@REM     9) Invoke custom functionality (if necessary)
-@REM     10) Create Activate.cmd and Deactivate.cmd
+@REM     7) Activate the environment
+@REM     8) Remove the python virtual environment (if necessary)
+@REM     9) Create the python virtual environment
+@REM     10) Invoke custom functionality (if necessary)
+@REM     11) Create Activate.cmd and Deactivate.cmd
 
 @set _DELETE_ENVIRONMENT_ON_ERROR=0
 @set _IS_FORCE=0
@@ -151,27 +152,31 @@ echo.
 echo Python Version %PYTHON_VERSION%
 echo.
 
+set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%CD%
+set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=%PYTHON_VERSION%
+set PYTHON_BOOTSTRAPPER_GENERATED_DIR=%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%\Generated\Windows\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
+
 @REM ----------------------------------------------------------------------
 @REM |
 @REM |  Delete micromamba (if requested)
 @REM |
 @REM ----------------------------------------------------------------------
 if %_IS_FORCE% EQU 0 goto :Force_End
-if not exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" goto :Force_Env_End
+if not exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%" goto :Force_Env_End
 
-echo Removing the Python%PYTHON_VERSION% micromamba environment...
+echo Removing the Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION% micromamba environment...
 
 call :_CreateTempFileName
 
 REM rmdir doesn't set ERRORLEVEL properly on failure, so we need to look at the size of the output
 REM To determine if failures have occurred.
-rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%" > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 set _OUTPUT_SIZE=0
 for /f %%i in ("%_BOOTSTRAP_IMPL_TEMP_FILENAME%") do set _OUTPUT_SIZE=%%~zi
 if %_OUTPUT_SIZE% NEQ 0 (
-    echo [1ARemoving the Python%PYTHON_VERSION% micromamba environment...[31m[1mFAILED[0m.
+    echo [1ARemoving the Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION% micromamba environment...[31m[1mFAILED[0m.
     echo.
 
     type "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
@@ -179,7 +184,7 @@ if %_OUTPUT_SIZE% NEQ 0 (
 )
 
 del "%_BOOTSTRAP_IMPL_TEMP_FILENAME%"
-echo [1ARemoving the Python%PYTHON_VERSION% micromamba environment...[32m[1mDONE[0m.
+echo [1ARemoving the Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION% micromamba environment...[32m[1mDONE[0m.
 
 :Force_Env_End
 
@@ -251,7 +256,7 @@ set PATH=%USERPROFILE%\micromamba\condabin;%PATH%
 @REM ----------------------------------------------------------------------
 echo Initializing the micromamba environment...
 
-if exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%" (
+if exist "%USERPROFILE%\micromamba\envs\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%" (
     echo [1AInitializing the micromamba environment...[32m[1mDONE[0m (already exists^).
     goto :InitializeNewEnvironment_End
 )
@@ -264,7 +269,7 @@ echo.
 echo.
 echo.
 
-"%USERPROFILE%\micromamba\micromamba.exe" create --channel conda-forge --name Python%PYTHON_VERSION% --root-prefix "%USERPROFILE%\micromamba" --yes python~=%PYTHON_VERSION%.0
+"%USERPROFILE%\micromamba\micromamba.exe" create --channel conda-forge --name Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION% --root-prefix "%USERPROFILE%\micromamba" --yes python~=%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%.0
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 goto :Exit
@@ -282,7 +287,7 @@ set _DELETE_ENVIRONMENT_ON_ERROR=1
 echo Activating the micromamba environment...
 call :_CreateTempFileName
 
-call micromamba.bat activate Python%PYTHON_VERSION% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+call micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
@@ -335,7 +340,7 @@ set _DELETE_ENVIRONMENT_ON_ERROR=0
 @REM ----------------------------------------------------------------------
 echo Activating the micromamba environment...
 
-call micromamba.bat activate Python%PYTHON_VERSION%
+call micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
@@ -351,7 +356,7 @@ echo [1AActivating the micromamba environment...[32m[1mDONE[0m.
 @REM |  Remove the python virtual environment (if necessary)
 @REM |
 @REM ----------------------------------------------------------------------
-if not exist .\Generated\Windows\Python%PYTHON_VERSION% goto :RemoveVirtualEnv_End
+if not exist %PYTHON_BOOTSTRAPPER_GENERATED_DIR% goto :RemoveVirtualEnv_End
 
 echo Removing the existing python virtual environment...
 
@@ -359,7 +364,7 @@ call :_CreateTempFileName
 
 REM rmdir doesn't set ERRORLEVEL properly on failure, so we need to look at the size of the output
 REM To determine if failures have occurred.
-rmdir /S /Q .\Generated\Windows\Python%PYTHON_VERSION% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
+rmdir /S /Q %PYTHON_BOOTSTRAPPER_GENERATED_DIR% > "%_BOOTSTRAP_IMPL_TEMP_FILENAME%" 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 set _OUTPUT_SIZE=0
@@ -386,7 +391,7 @@ echo Creating the python virtual environment...
 
 call :_CreateTempFileName
 
-virtualenv --no-periodic-update --no-vcs-ignore --verbose .\Generated\Windows\Python%PYTHON_VERSION% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
+virtualenv --no-periodic-update --no-vcs-ignore --verbose %PYTHON_BOOTSTRAPPER_GENERATED_DIR% > %_BOOTSTRAP_IMPL_TEMP_FILENAME% 2>&1
 set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 (
@@ -412,7 +417,7 @@ goto :BootstrapEpilog_Skip
 :BootstrapEpilog_Execute
 @REM ----------------------------------------------------------------------
 @REM |  Activate the python library
-call Generated\Windows\Python%PYTHON_VERSION%\Scripts\activate.bat
+call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\activate.bat
 
 echo.
 
@@ -465,14 +470,10 @@ echo.
 @REM |  Create Activate.cmd and Deactivate.cmd
 @REM |
 @REM ----------------------------------------------------------------------
-
-@REM Get the current directory name
-set _CURRENT_DIR=%CD%
+echo Creating Activate.cmd...
 
 @REM Get the current directory name to use as the title for the activated window
-for %%I in (%_CURRENT_DIR%) do set _DIR_NAME=%%~nxI
-
-echo Creating Activate.cmd...
+for %%I in (%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%) do set _DIR_NAME=%%~nxI
 
 (
     echo @REM This file is generated during the Bootstrap process and is specific to your environment.
@@ -481,20 +482,20 @@ echo Creating Activate.cmd...
     echo.
     echo set _ERRORLEVEL=0
     echo.
-    echo if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "" (
-    echo     if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "%_CURRENT_DIR%" (
+    echo if "%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "" (
+    echo     if "%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%" NEQ "%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%" (
     echo         echo.
-    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
     echo.
     echo         set _ERRORLEVEL=-1
     echo         goto :Exit
     echo     ^)
     echo ^)
     echo.
-    echo if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "" (
-    echo     if "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "%PYTHON_VERSION%" (
+    echo if "%%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "" (
+    echo     if "%%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%" NEQ "%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%" (
     echo         echo.
-    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
+    echo         echo [31m[1mERROR:[0m This environment cannot be activated over "%%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
     echo.
     echo         set _ERRORLEVEL=-1
     echo         goto :Exit
@@ -503,11 +504,15 @@ echo Creating Activate.cmd...
     echo.
     echo pushd %cd%
     echo.
-    echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_VERSION%
-    echo call .\Generated\Windows\Python%PYTHON_VERSION%\Scripts\activate.bat
+    echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
+    echo call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\activate.bat
+    echo.
+    echo set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%
+    echo set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
+    echo set PYTHON_BOOTSTRAPPER_GENERATED_DIR=%PYTHON_BOOTSTRAPPER_GENERATED_DIR%
     echo.
     echo title %_DIR_NAME%
-    echo set PROMPT=(Python%PYTHON_VERSION%^) $P$G
+    echo set PROMPT=(Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%^) $P$G
     echo.
     echo if exist "ActivateEpilog.cmd" goto :ActivateEpilog_Execute
     echo if exist "ActivateEpilog.py" goto :ActivateEpilog_Execute
@@ -541,7 +546,7 @@ echo Creating Activate.cmd...
     echo ^)
     echo.
     echo REM Execute the instructions
-    echo if not exist ActivateEpilog_py.cmd goto :ActivattEpilog_ExecutePyCmd_End
+    echo if not exist ActivateEpilog_py.cmd goto :ActivateEpilog_ExecutePyCmd_End
     echo.
     echo call ActivateEpilog_py.cmd
     echo set _ERRORLEVEL=%%ERRORLEVEL%%
@@ -562,15 +567,19 @@ echo Creating Activate.cmd...
     echo echo [61m[1m%CD%[0m has been [32m[1mactivated[0m.
     echo echo.
     echo.
-    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%_CURRENT_DIR%
-    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=%PYTHON_VERSION%
     echo.
     echo :Exit
+    echo if %%_ERRORLEVEL%% NEQ 0 (
+    echo    set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
+    echo    set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
+    echo    set PYTHON_BOOTSTRAPPER_GENERATED_DIR=
+    echo ^)
+    echo.
     echo exit /B %%_ERRORLEVEL%%
-) > Activate%PYTHON_VERSION%.cmd
+) > Activate%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%.cmd
 
 if exist Activate.cmd del Activate.cmd >NUL
-mklink Activate.cmd Activate%PYTHON_VERSION%.cmd >NUL
+mklink Activate.cmd Activate%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%.cmd >NUL
 
 echo [1ACreating Activate.cmd...[32m[1mDONE[0m.
 
@@ -583,7 +592,7 @@ echo Creating Deactivate.cmd...
     echo.
     echo set _ERRORLEVEL=0
     echo.
-    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] EQU [] (
+    echo if [%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] EQU [] (
     echo     echo.
     echo     echo [31m[1mERROR:[0m The environment has not been activated.
     echo.
@@ -591,17 +600,17 @@ echo Creating Deactivate.cmd...
     echo     goto :Exit
     echo ^)
     echo.
-    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%_CURRENT_DIR%] (
+    echo if [%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%] NEQ [%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%] (
     echo     echo.
-    echo     echo [31m[1mERROR:[0m This environment was activated by "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
+    echo     echo [31m[1mERROR:[0m This environment was activated by "%%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%%".
     echo.
     echo     set _ERRORLEVEL=-1
     echo     goto :Exit
     echo ^)
     echo.
-    echo if [%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%] NEQ [%PYTHON_VERSION%] (
+    echo if [%%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%] NEQ [%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%] (
     echo     echo.
-    echo     echo [31m[1mERROR:[0m This environment was activated with "%%_PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
+    echo     echo [31m[1mERROR:[0m This environment was activated with "%%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%%".
     echo.
     echo     set _ERRORLEVEL=-1
     echo     goto :Exit
@@ -656,29 +665,27 @@ echo Creating Deactivate.cmd...
     echo :DeactivateEpilog_ExecutePy_End
     echo :DeactivateEpilog_Skip
     echo.
-    echo call .\Generated\Windows\Python%PYTHON_VERSION%\Scripts\deactivate.bat
+    echo call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\deactivate.bat
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat deactivate
     echo.
     echo popd
+    echo.
+    echo set PYTHON_BOOTSTRAPPER_GENERATED_DIR=
+    echo set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
+    echo set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
     echo.
     echo echo.
     echo echo [61m[1m%CD%[0m has been [31m[1mdeactivated[0m.
     echo echo.
     echo.
-    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
-    echo set _PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
-    echo.
     echo :Exit
     echo exit /B %%_ERRORLEVEL%%
-) > Deactivate%PYTHON_VERSION%.cmd
+) > Deactivate%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%.cmd
 
 if exist Deactivate.cmd del Deactivate.cmd >NUL
-mklink Deactivate.cmd Deactivate%PYTHON_VERSION%.cmd >NUL
+mklink Deactivate.cmd Deactivate%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%.cmd >NUL
 
 echo [1ACreating Deactivate.cmd...[32m[1mDONE[0m.
-
-set _DIR_NAME=
-set _CURRENT_DIR=
 
 @REM ----------------------------------------------------------------------
 @REM |
@@ -715,7 +722,7 @@ call :_DeleteTempFile
 if %_DELETE_ENVIRONMENT_ON_ERROR% EQU 1 (
     echo Removing the micromamba environment...
 
-    rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_VERSION%"
+    rmdir /S /Q "%USERPROFILE%\micromamba\envs\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%"
 
     if %ERRORLEVEL% NEQ 0 (
         echo [1ARemoving the micromamba environment...[31m[1mFAILED[0m.
