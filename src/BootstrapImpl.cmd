@@ -152,6 +152,11 @@ echo.
 echo Python Version %PYTHON_VERSION%
 echo.
 
+@REM ----------------------------------------------------------------------
+@REM |
+@REM |  Set global environment variables
+@REM |
+@REM ----------------------------------------------------------------------
 set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%CD%
 set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=%PYTHON_VERSION%
 set PYTHON_BOOTSTRAPPER_GENERATED_DIR=%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%\Generated\Windows\Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
