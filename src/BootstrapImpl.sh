@@ -15,7 +15,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.12.0"
+echo "Script Version 0.12.1"
 echo ""
 
 # This script:
@@ -585,9 +585,6 @@ pushd "${PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}" > /dev/null || return \$?
 export MAMBA_ROOT_PREFIX=~/micromamba
 eval "\$(~/.local/bin/micromamba shell hook --shell bash)" || return \$?
 
-# Undo all actions if failure
-error=0
-
 # Get the original prompt before it is decorated
 original_prompt=\${PS1}
 
@@ -598,62 +595,67 @@ export PYTHON_BOOTSTRAPPER_ACTIVATION_DIR="${PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}
 export PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION="${PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}"
 export PYTHON_BOOTSTRAPPER_GENERATED_DIR="${PYTHON_BOOTSTRAPPER_GENERATED_DIR}"
 
-function EnvironmentCleanup() {
-    if [[ \${error} != 0 ]]; then
-        unset PYTHON_BOOTSTRAPPER_GENERATED_DIR
-        unset PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION
-        unset PYTHON_BOOTSTRAPPER_ACTIVATION_DIR
-
-        deactivate || return \$?
-        micromamba deactivate || return \$?
-    fi
-}
-
-trap EnvironmentCleanup RETURN
-
-# Set the prompt
-if [[ -z \${_PYTHON_ENVIRONMENT_IS_ACTIVATED} ]]; then
-    # If here, the variable is not set
-    PS1="(Python${PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}) \${original_prompt}"
-else
-    PS1="\${original_prompt}"
-fi
-
-if [[ -f "ActivateEpilog.sh" ]]; then
-    source ./ActivateEpilog.sh "\$@"
-    error=\$?
-
-    if [[ \${error} != 0 ]]; then
-        echo "[31m[1mERROR: [0mActivateEpilog.sh failed."
-        return \${error}
-    fi
-fi
-
-if [[ -f "ActivateEpilog.py" ]]; then
-    # Create the instructions
-    python ActivateEpilog.py ActivateEpilog_py.sh "\$@"
-    error=\$?
-
-    if [[ \${error} != 0 ]]; then
-        echo "[31m[1mERROR: [0mActivateEpilog.py failed."
-        ! [[ -f "ActivateEpilog_py.sh" ]] || rm "ActivateEpilog_py.sh"
-        return \${error}
+function Execute() {
+    # Set the prompt
+    if [[ -z \${_PYTHON_ENVIRONMENT_IS_ACTIVATED} ]]; then
+        # If here, the variable is not set
+        PS1="(Python${PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION}) \${original_prompt}"
+    else
+        PS1="\${original_prompt}"
     fi
 
-    # Execute the instructions
-    if [[ -f "ActivateEpilog_py.sh" ]]; then
-        chmod u+x ActivateEpilog_py.sh
-
-        source ./ActivateEpilog_py.sh
+    if [[ -f "ActivateEpilog.sh" ]]; then
+        source ./ActivateEpilog.sh "\$@"
         error=\$?
 
-        rm -f ActivateEpilog_py.sh
-
         if [[ \${error} != 0 ]]; then
-            echo "[31m[1mERROR: [0mExecuting the ActivateEpilog.py output failed."
+            echo "[31m[1mERROR: [0mActivateEpilog.sh failed."
             return \${error}
         fi
     fi
+
+    if [[ -f "ActivateEpilog.py" ]]; then
+        # Create the instructions
+        python ActivateEpilog.py ActivateEpilog_py.sh "\$@"
+        error=\$?
+
+        if [[ \${error} != 0 ]]; then
+            echo "[31m[1mERROR: [0mActivateEpilog.py failed."
+            ! [[ -f "ActivateEpilog_py.sh" ]] || rm "ActivateEpilog_py.sh"
+            return \${error}
+        fi
+
+        # Execute the instructions
+        if [[ -f "ActivateEpilog_py.sh" ]]; then
+            chmod u+x ActivateEpilog_py.sh
+
+            source ./ActivateEpilog_py.sh
+            error=\$?
+
+            rm -f ActivateEpilog_py.sh
+
+            if [[ \${error} != 0 ]]; then
+                echo "[31m[1mERROR: [0mExecuting the ActivateEpilog.py output failed."
+                return \${error}
+            fi
+        fi
+    fi
+
+    return 0
+}
+
+Execute "\$@"
+error=\$?
+
+if [[ \${error} != 0 ]]; then
+    unset PYTHON_BOOTSTRAPPER_GENERATED_DIR
+    unset PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION
+    unset PYTHON_BOOTSTRAPPER_ACTIVATION_DIR
+
+    deactivate || return \$?
+    micromamba deactivate || return \$?
+
+    return \${error}
 fi
 
 echo ""
@@ -661,6 +663,7 @@ echo "[61m[1m${PYTHON_BOOTSTRAPPER_ACTIVATION_DIR}[0m has been [32m[1mactiv
 echo ""
 
 export _PYTHON_ENVIRONMENT_IS_ACTIVATED=1
+return 0
 END_OF_CONTENT
 # ----------------------------------------------------------------------
 
