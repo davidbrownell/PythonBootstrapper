@@ -14,7 +14,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.11.0
+@echo Script Version 0.11.1
 @echo.
 
 @REM This script:
@@ -575,9 +575,9 @@ for %%I in (%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%) do set _DIR_NAME=%%~nxI
     echo.
     echo :Exit
     echo if %%_ERRORLEVEL%% NEQ 0 (
-    echo    set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
-    echo    set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
-    echo    set PYTHON_BOOTSTRAPPER_GENERATED_DIR=
+    echo     set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=
+    echo     set PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION=
+    echo     set PYTHON_BOOTSTRAPPER_GENERATED_DIR=
     echo ^)
     echo.
     echo exit /B %%_ERRORLEVEL%%
