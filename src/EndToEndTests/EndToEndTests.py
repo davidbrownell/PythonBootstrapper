@@ -38,7 +38,7 @@ PYTHON_VERSIONS = [
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
-    _script_version = "0.11.0"
+    _script_version = "0.11.1"
 
     _is_windows = True
 
