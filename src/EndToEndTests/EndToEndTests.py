@@ -53,7 +53,7 @@ if os.name.lower() == "nt":
     generate_set_command_func = lambda var, value: "set {}={}".format(var, value)
 
 else:
-    _script_version = "0.12.1"
+    _script_version = "0.12.2"
 
     _is_windows = False
 

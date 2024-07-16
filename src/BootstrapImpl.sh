@@ -15,7 +15,7 @@
 set +e # Continue on errors
 
 echo ""
-echo "Script Version 0.12.1"
+echo "Script Version 0.12.2"
 echo ""
 
 # This script:
@@ -339,6 +339,8 @@ else
     # From this point forward, delete the environment if an error occurrs as the environment
     # won't be fully initialized.
 
+    export MAMBA_ROOT_PREFIX=~/micromamba
+
     # ----------------------------------------------------------------------
     # |  Initialize the shell
     if [[ ${error} == 0 ]]; then
@@ -374,6 +376,8 @@ else
 
     micromamba deactivate
     error=$?
+
+    unset MAMBA_ROOT_PREFIX
 
     if [[ ${error} != 0 ]]; then
         echo "[1ADeactivating the micromamba environment...[31m[1mFAILED[0m."
