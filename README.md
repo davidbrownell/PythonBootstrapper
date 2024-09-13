@@ -1,8 +1,10 @@
 # PythonBootstrapper
 
 <!-- BEGIN: Exclude Package -->
+<!-- [BEGIN] Badges -->
 [![License](https://img.shields.io/github/license/davidbrownell/PythonBootstrapper?color=dark-green)](https://github.com/davidbrownell/PythonBootstrapper/blob/master/LICENSE.txt)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/y/davidbrownell/PythonBootstrapper?color=dark-green)](https://github.com/davidbrownell/PythonBootstrapper/commits/main/)
+<!-- [END] Badges -->
 <!-- END: Exclude Package -->
 
 This repository includes tools and scripts that install python locally in as consistent and benign as way as possible. Supports side-by-side installations for different versions of python and minimizes overhead through the use of virtual environments.
@@ -107,6 +109,7 @@ A terminal environment can either be explicitly deactivated or simply closed.
 
 <!-- BEGIN: Exclude Package -->
 ## Installation
+<!-- [BEGIN] Installation -->
 ### Creating a PythonBootstrapper Repository
 
 Any repository can leverage the functionality provided by PythonBootstrapper, including the creation of custom steps invoked during the [bootstrap](#bootstrap), [activation](#activate), or [deactivation](#deactivate) processes.
@@ -167,9 +170,12 @@ pip install -r requirements.txt
 import os
 os.system("pip install -r requirements.txt")
 ```
+<!-- [END] Installation -->
 
 ## Development
-Please visit [Contributing](https://github.com/davidbrownell/PythonBootstrapper/blob/main/CONTRIBUTING.md) and [Development](https://github.com/davidbrownell/PythonBootstrapper/blob/main/DEVELOPMENT.md) for information on contributing to this project.
+<!-- [BEGIN] Development -->
+Please visit [Contributing](https://github.com/davidbrownell/PythonBootstrapper/blob/main/CONTRIBUTING.md) and [Development](https://github.com/davidbrownell/PythonBootstrapper/blob/main/DEVELOPMENT.md) for information on contributing to this project.<!-- [END] Development -->
+
 <!-- END: Exclude Package -->
 
 ## Additional Information
@@ -177,12 +183,14 @@ Additional information can be found at these locations.
 
 | Title | Document | Description |
 | --- | --- | --- |
+<!-- [BEGIN] Additional Information -->
 | Code of Conduct | [CODE_OF_CONDUCT.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/CODE_OF_CONDUCT.md) | Information about the the norms, rules, and responsibilities we adhere to when participating in this open source community. |
 | Contributing | [CONTRIBUTING.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/CONTRIBUTING.md) | Information about contributing code changes to this project. |
 | Development | [DEVELOPMENT.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/DEVELOPMENT.md) | Information about development activities involved in making changes to this project. |
 | Governance | [GOVERNANCE.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/GOVERNANCE.md) | Information about how this project is governed. |
 | Maintainers | [MAINTAINERS.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/MAINTAINERS.md) | Information about individuals who maintain this project. |
 | Security | [SECURITY.md](https://github.com/davidbrownell/PythonBootstrapper/blob/main/SECURITY.md) | Information about how to privately report security issues associated with this project. |
+<!-- [END] Additional Information -->
 
 ## License
 

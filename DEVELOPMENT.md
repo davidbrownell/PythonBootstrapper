@@ -1,6 +1,7 @@
 # Local Development
 
 ## Enlistment
+<!-- [BEGIN] Enlistment -->
 Enlistment in this repository involves these steps.
 
 <table>
@@ -73,9 +74,11 @@ Enlistment in this repository involves these steps.
     </td>
 </tr>
 </table>
-
+<!-- [END] Enlistment -->
 
 ## Development Activities
+<!-- [BEGIN] Development Activities -->
 | Activity | Command Line | Description | Invoked by Continuous Integration |
 | --- | --- | --- | :-: |
 | Automated Testing | `pytest EndToEndTests.py -vv --capture=no` | Run automated tests using [pytest](https://docs.pytest.org/). | :white_check_mark: |
+<!-- [END] Development Activities -->
