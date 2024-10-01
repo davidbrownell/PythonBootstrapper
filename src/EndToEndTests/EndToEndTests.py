@@ -38,7 +38,7 @@ PYTHON_VERSIONS = [
 
 # ----------------------------------------------------------------------
 if os.name.lower() == "nt":
-    _script_version = "0.11.1"
+    _script_version = "0.11.2"
 
     _is_windows = True
 
@@ -1796,7 +1796,7 @@ _error_result = _Execute([], Path(__file__).parent, INVALID_COMMAND)[0]
 def _GetBootstrapBranchArg() -> str:
     result = subprocess.run(
         "git branch --show-current",
-        check=True,
+        check=False,
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
