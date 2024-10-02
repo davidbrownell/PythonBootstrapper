@@ -519,8 +519,24 @@ for %%I in (%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%) do set _DIR_NAME=%%~nxI
     echo @REM ^(see https://github.com/mamba-org/mamba/issues/3405^) for more info. Capture the
     echo @REM current path and append it to the path after activation.
     echo set _PREVIOUS_PATH=%%PATH%%
+    echo.
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
-    echo set PATH=%%PATH%%;%%_PREVIOUS_PATH%%
+    echo.
+    echo setlocal enabledelayedexpansion
+    echo.
+    echo for %%%%i in (%%_PREVIOUS_PATH%%) do (
+    echo     set "found="
+    echo     for %%%%j in (!!PATH!!) do (
+    echo         if "%%%%i"=="%%%%j" (
+    echo             set "found=1"
+    echo             goto :exit_loop
+    echo         )
+    echo     )
+    echo     :exit_loop
+    echo     if not defined found (
+    echo         set "PATH=!!PATH!!;%%%%i"
+    echo     )
+    echo )
     echo.
     echo call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\activate.bat
     echo.

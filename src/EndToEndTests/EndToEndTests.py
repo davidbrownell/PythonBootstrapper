@@ -1428,7 +1428,7 @@ class TestErrors(object):
             " && ".join(commands),
         )
 
-        assert result == 0
+        assert result == 0, output
         assert output == textwrap.dedent(
             f"""\
 
