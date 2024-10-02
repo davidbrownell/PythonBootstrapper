@@ -14,7 +14,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.11.2
+@echo Script Version 0.11.2-BugBug1
 @echo.
 
 @REM This script:
