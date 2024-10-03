@@ -14,7 +14,7 @@
 @setlocal EnableDelayedExpansion
 
 @echo.
-@echo Script Version 0.11.1
+@echo Script Version 0.11.2
 @echo.
 
 @REM This script:
@@ -279,6 +279,12 @@ set _ERRORLEVEL=%ERRORLEVEL%
 
 if %_ERRORLEVEL% NEQ 0 goto :Exit
 
+@REM Ensure that micromamba.bat always exists (newer versions of micromamba only create mamba.bat).
+@REM This ensures that we are always backwards compatible.
+if not exist "%USERPROFILE%\micromamba\condabin\micromamba.bat" (
+    mklink "%USERPROFILE%\micromamba\condabin\micromamba.bat" "%USERPROFILE%\micromamba\condabin\mamba.bat"
+)
+
 echo.
 echo.
 echo.
@@ -509,7 +515,28 @@ for %%I in (%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%) do set _DIR_NAME=%%~nxI
     echo.
     echo pushd %cd%
     echo.
+    echo @REM Micromamba version 2.0.0 and 2.0.1 have a bug where activation will overwrite the path
+    echo @REM ^(see https://github.com/mamba-org/mamba/issues/3405^) for more info. Capture the
+    echo @REM current path and append it to the path after activation.
+    echo.
+    echo @REM Begin workaround
+    echo set _PREVIOUS_PATH=%%PATH%%
+    echo.
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
+    echo.
+    echo setlocal EnableDelayedExpansion
+    echo.
+    echo for %%%%a in ("%%_PREVIOUS_PATH:;=" "%%"^) do (
+    echo     echo ";%%PATH%%;" ^| find /C /I ";%%%%~a;" ^>NUL ^|^| (
+    echo         set "PATH=^!PATH^!;%%%%~a"
+    echo     ^)
+    echo ^)
+    echo.
+    echo endlocal
+    echo.
+    echo set _PREVIOUS_PATH=
+    echo @REM End workaround
+    echo.
     echo call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\activate.bat
     echo.
     echo set PYTHON_BOOTSTRAPPER_ACTIVATION_DIR=%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%

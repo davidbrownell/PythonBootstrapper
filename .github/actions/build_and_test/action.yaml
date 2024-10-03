@@ -46,31 +46,31 @@ runs:
       shell: ${{ inputs.shell_name }}
       run: |
         cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.8
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --bootstrap-branch WindowsBug2 --python-version 3.8
 
     - name: Bootstrap 3.9
       shell: ${{ inputs.shell_name }}
       run: |
         cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.9
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --bootstrap-branch WindowsBug2 --python-version 3.9
 
     - name: Bootstrap 3.10
       shell: ${{ inputs.shell_name }}
       run: |
         cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.10
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --bootstrap-branch WindowsBug2 --python-version 3.10
 
     - name: Bootstrap 3.11
       shell: ${{ inputs.shell_name }}
       run: |
         cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.11
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --bootstrap-branch WindowsBug2 --python-version 3.11
 
     - name: Bootstrap 3.12
       shell: ${{ inputs.shell_name }}
       run: |
         cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.12
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --bootstrap-branch WindowsBug2 --python-version 3.12
 
     - name: Black
       shell: ${{ inputs.shell_name }}
