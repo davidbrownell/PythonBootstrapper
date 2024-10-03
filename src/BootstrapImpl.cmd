@@ -518,25 +518,24 @@ for %%I in (%PYTHON_BOOTSTRAPPER_ACTIVATION_DIR%) do set _DIR_NAME=%%~nxI
     echo @REM Micromamba version 2.0.0 and 2.0.1 have a bug where activation will overwrite the path
     echo @REM ^(see https://github.com/mamba-org/mamba/issues/3405^) for more info. Capture the
     echo @REM current path and append it to the path after activation.
+    echo.
+    echo @REM Begin workaround
     echo set _PREVIOUS_PATH=%%PATH%%
     echo.
     echo call %USERPROFILE%\micromamba\condabin\micromamba.bat activate Python%PYTHON_BOOTSTRAPPER_ACTIVATION_VERSION%
     echo.
-    echo setlocal enabledelayedexpansion
+    echo setlocal EnableDelayedExpansion
     echo.
-    echo for %%%%i in (%%_PREVIOUS_PATH%%) do (
-    echo     set "found="
-    echo     for %%%%j in (!!PATH!!) do (
-    echo         if "%%%%i"=="%%%%j" (
-    echo             set "found=1"
-    echo             goto :exit_loop
-    echo         )
-    echo     )
-    echo     :exit_loop
-    echo     if not defined found (
-    echo         set "PATH=!!PATH!!;%%%%i"
-    echo     )
-    echo )
+    echo for %%%%a in ("%%_PREVIOUS_PATH:;=" "%%"^) do (
+    echo     echo ";%%PATH%%;" ^| find /C /I ";%%%%~a;" ^>NUL ^|^| (
+    echo         set "PATH=^!PATH^!;%%%%~a"
+    echo     ^)
+    echo ^)
+    echo.
+    echo endlocal
+    echo.
+    echo set _PREVIOUS_PATH=
+    echo @REM End workaround
     echo.
     echo call %PYTHON_BOOTSTRAPPER_GENERATED_DIR%\Scripts\activate.bat
     echo.
