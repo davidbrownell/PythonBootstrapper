@@ -42,12 +42,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Bootstrap 3.8
-      shell: ${{ inputs.shell_name }}
-      run: |
-        cd src/EndToEndTests
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.8
-
     - name: Bootstrap 3.9
       shell: ${{ inputs.shell_name }}
       run: |
@@ -71,6 +65,12 @@ runs:
       run: |
         cd src/EndToEndTests
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.12
+
+    - name: Bootstrap 3.13
+      shell: ${{ inputs.shell_name }}
+      run: |
+        cd src/EndToEndTests
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version 3.13
 
     - name: Black
       shell: ${{ inputs.shell_name }}

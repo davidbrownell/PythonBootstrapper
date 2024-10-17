@@ -28,11 +28,12 @@ import pytest
 INVALID_COMMAND = "this is an invalid command"
 PYTHON_VERSIONS = [
     None,  # Use default version
+    "3.13",
     "3.12",
     "3.11",
     "3.10",
     "3.9",
-    "3.8",
+    # "3.8",
 ]
 
 
@@ -1564,7 +1565,7 @@ class TestErrors(object):
             {root} has been activated.
 
 
-            ERROR: This environment was activated with "3.12".
+            ERROR: This environment was activated with "{PYTHON_VERSIONS[1]}".
             """,
         )
 

@@ -58,11 +58,11 @@ All changes to this repository are validated [GitHub runners](https://docs.githu
 
 | Python Version | First Released | End of Support |
 | --- | --- | --- |
+| 3.13 | October 2024 | October 2029 |
 | 3.12 | October 2023 | October 2028 |
 | 3.11 | October 2022 | October 2027 |
 | 3.10 | October 2021 | October 2026 |
 | 3.9 | October 2020 | October 2025 |
-| 3.8 | October 2019 | October 2024 |
 
 ### How to use PythonBootstrapper
 To begin using a git repository leveraging PythonBootstrapper functionality, run the scripts defined here in the following sections.
