@@ -9,6 +9,8 @@
 
 This repository includes tools and scripts that install python locally in as consistent and benign as way as possible. Supports side-by-side installations for different versions of python and minimizes overhead through the use of virtual environments.
 
+==This repository has been deprecated; please use [uv](https://docs.astral.sh/uv/) instead.==
+
 <!-- BEGIN: Exclude Package -->
 ## Contents
 - [Overview](#overview)
